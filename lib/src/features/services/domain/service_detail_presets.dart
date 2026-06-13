@@ -20,8 +20,8 @@ class ServiceDetailPresets {
           layout: ServiceDetailLayout.apartment,
           description:
               'Если у вас мало времени на уборку и нет серьезных загрязнений, то экспресс уборка для вас.',
-          darkCard: true,
-          heroGradient: const [Color(0xFF393E5B), Color(0xFF1F2336)],
+          darkCard: false,
+          heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.king_bed_outlined,
           roomOptions: _defaultRooms,
         );
@@ -31,7 +31,7 @@ class ServiceDetailPresets {
           description:
               'Если у вас мало времени на уборку и нет серьезных загрязнений, то экспресс уборка для вас.',
           darkCard: false,
-          heroGradient: const [Color(0xFFE9EEF8), Colors.white],
+          heroGradient: const [Color(0xFFB8DDFF), Colors.white],
           heroIcon: Icons.weekend_outlined,
           roomOptions: _defaultRooms,
         );
@@ -41,7 +41,7 @@ class ServiceDetailPresets {
           description:
               'Быстрая уборка основных зон и поддержание чистоты на каждый день.',
           darkCard: false,
-          heroGradient: const [Color(0xFFE8F2FF), Color(0xFFFFFFFF)],
+          heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.flash_on_outlined,
           roomOptions: _defaultRooms,
         );
@@ -51,7 +51,7 @@ class ServiceDetailPresets {
           description:
               'Поддержим порядок в офисе: чистим рабочие зоны, санузлы и переговорные.',
           darkCard: false,
-          heroGradient: const [Color(0xFFEDE8FF), Color(0xFFFFFFFF)],
+          heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.apartment,
           roomOptions: _defaultRooms,
         );
@@ -61,7 +61,7 @@ class ServiceDetailPresets {
           description:
               'Особое внимание к детским комнатам, игрушкам и деликатным поверхностям.',
           darkCard: false,
-          heroGradient: const [Color(0xFFFFF3E4), Color(0xFFFFFFFF)],
+          heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.toys_outlined,
           roomOptions: _defaultRooms,
         );
@@ -71,7 +71,7 @@ class ServiceDetailPresets {
           description:
               'Наведём чистоту и порядок в вашем доме. Проводим поддерживающую уборку, генеральную и после ремонта.',
           darkCard: false,
-          heroGradient: const [Color(0xFF4E586F), Color(0xFF232734)],
+          heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.house_outlined,
           cleaningOptions: const [
             ServiceCleaningOption(id: 'support', label: 'Поддерживающая'),
@@ -95,7 +95,7 @@ class ServiceDetailPresets {
           description:
               service.subtitle ??
               'Мы бережно наведём чистоту и порядок в любом помещении.',
-          heroGradient: const [Color(0xFFE9EEF8), Colors.white],
+          heroGradient: const [Color(0xFFB8DDFF), Colors.white],
           heroIcon: Icons.cleaning_services,
           roomOptions: _defaultRooms,
         );

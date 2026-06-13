@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../controllers/auth_controller.dart';
 import 'cta_button.dart';
 
@@ -19,26 +19,13 @@ class InfoStep extends StatefulWidget {
 }
 
 class _InfoStepState extends State<InfoStep> {
-  static const List<String> _districtOptions = [
-    'Центральный',
-    'Северный',
-    'Южный',
-    'Восточный',
-    'Западный',
-  ];
-
-  late final TextEditingController _phoneController;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _addressController;
-  String? _selectedDistrict;
 
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController(
-      text: widget.controller.phoneNumber,
-    );
     _nameController = TextEditingController(
       text: widget.controller.lastSubmittedName,
     );
@@ -48,12 +35,10 @@ class _InfoStepState extends State<InfoStep> {
     _addressController = TextEditingController(
       text: widget.controller.lastSubmittedAddress,
     );
-    _selectedDistrict = widget.controller.lastSubmittedDistrict;
   }
 
   @override
   void dispose() {
-    _phoneController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _addressController.dispose();
@@ -68,8 +53,6 @@ class _InfoStepState extends State<InfoStep> {
         _nameController.text.isNotEmpty &&
         _emailController.text.isNotEmpty &&
         _addressController.text.isNotEmpty &&
-        _selectedDistrict != null &&
-        _selectedDistrict!.isNotEmpty &&
         !controller.isLoading;
     final bool hasFixedHeight =
         widget.viewportHeight.isFinite && widget.viewportHeight > 0;
@@ -85,23 +68,6 @@ class _InfoStepState extends State<InfoStep> {
           ),
         ),
         const SizedBox(height: 16),
-        TextField(
-          controller: _phoneController,
-          readOnly: true,
-          enabled: false,
-          decoration: const InputDecoration(labelText: 'Телефон'),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _nameController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(labelText: 'Имя'),
-          onChanged: (_) {
-            widget.controller.clearError();
-            setState(() {});
-          },
-        ),
-        const SizedBox(height: 12),
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -126,13 +92,21 @@ class _InfoStepState extends State<InfoStep> {
           },
         ),
         const SizedBox(height: 12),
-        _buildDistrictField(context),
+        TextField(
+          controller: _nameController,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(labelText: 'Имя'),
+          onChanged: (_) {
+            widget.controller.clearError();
+            setState(() {});
+          },
+        ),
         if (controller.errorMessage != null) ...[
           const SizedBox(height: 12),
           Text(
             controller.errorMessage!,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.redAccent,
+              color: AppColors.danger,
             ),
           ),
         ],
@@ -145,7 +119,6 @@ class _InfoStepState extends State<InfoStep> {
                   name: _nameController.text,
                   email: _emailController.text,
                   address: _addressController.text,
-                  district: _selectedDistrict!,
                 )
               : null,
         ),
@@ -158,137 +131,5 @@ class _InfoStepState extends State<InfoStep> {
     }
 
     return content;
-  }
-
-  Widget _buildDistrictField(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final bool isCupertino =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-    if (isCupertino) {
-      return _CupertinoDistrictField(
-        value: _selectedDistrict,
-        onTap: _openCupertinoDistrictPicker,
-      );
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: _selectedDistrict,
-      isExpanded: true,
-      decoration: const InputDecoration(labelText: 'Район'),
-      items: _districtOptions
-          .map(
-            (district) => DropdownMenuItem<String>(
-              value: district,
-              child: Text(district),
-            ),
-          )
-          .toList(),
-      onChanged: (value) {
-        widget.controller.clearError();
-        setState(() {
-          _selectedDistrict = value;
-        });
-      },
-    );
-  }
-
-  void _openCupertinoDistrictPicker() {
-    FocusScope.of(context).unfocus();
-    final current = _selectedDistrict;
-    final initialIndex = current != null
-        ? _districtOptions.indexOf(current)
-        : 0;
-    final resolvedIndex = initialIndex >= 0 ? initialIndex : 0;
-    int tempIndex = resolvedIndex;
-
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) {
-        final separatorColor = CupertinoColors.separator.resolveFrom(context);
-        final controller = FixedExtentScrollController(
-          initialItem: resolvedIndex,
-        );
-        return Container(
-          height: 280,
-          color: CupertinoColors.systemBackground.resolveFrom(context),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 44,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Отмена'),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          widget.controller.clearError();
-                          setState(() {
-                            _selectedDistrict = _districtOptions[tempIndex];
-                          });
-                        },
-                        child: const Text('Готово'),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(height: 1, color: separatorColor),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: controller,
-                    itemExtent: 36,
-                    onSelectedItemChanged: (index) {
-                      tempIndex = index;
-                    },
-                    children: _districtOptions
-                        .map((district) => Center(child: Text(district)))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CupertinoDistrictField extends StatelessWidget {
-  const _CupertinoDistrictField({required this.value, required this.onTap});
-
-  final String? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bool hasValue = value != null && value!.isNotEmpty;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Район',
-          suffixIcon: Icon(Icons.expand_more),
-        ),
-        isEmpty: !hasValue,
-        child: Text(
-          hasValue ? value! : 'Выберите район',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: hasValue
-                ? theme.textTheme.bodyMedium?.color
-                : Colors.black54,
-          ),
-        ),
-      ),
-    );
   }
 }

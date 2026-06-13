@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../controllers/auth_controller.dart';
 import 'otp_code_input.dart';
 
@@ -33,7 +34,7 @@ class _OtpStepState extends State<OtpStep> {
         Text(
           'Отправлен на номер ${controller.phoneNumber}',
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.black.withAlpha((0.6 * 255).round()),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 28),
@@ -52,7 +53,7 @@ class _OtpStepState extends State<OtpStep> {
               child: Text(
                 'Отправить снова',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -64,7 +65,7 @@ class _OtpStepState extends State<OtpStep> {
           Text(
             controller.errorMessage!,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.redAccent,
+              color: AppColors.danger,
             ),
           ),
         ],

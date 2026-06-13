@@ -118,13 +118,10 @@ class _OrderHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool isDark = order.highlightCard;
-    final Color background = isDark ? AppColors.darkCard : Colors.white;
-    final Color textColor = isDark ? Colors.white : AppColors.textPrimary;
-    final Color secondaryTextColor = isDark
-        ? Colors.white.withValues(alpha: 0.8)
-        : AppColors.textSecondary;
-    final Color statusColor = isDark ? Colors.white : order.status.color;
+    final bool highlighted = order.highlightCard;
+    final Color background = highlighted
+        ? AppColors.softBlue
+        : AppColors.surface;
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -137,17 +134,8 @@ class _OrderHistoryCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(24),
-          border: isDark
-              ? null
-              : Border.all(color: AppColors.border.withValues(alpha: 0.8)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +145,7 @@ class _OrderHistoryCard extends StatelessWidget {
                 Text(
                   order.status.label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: statusColor,
+                    color: order.status.color,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -166,7 +154,7 @@ class _OrderHistoryCard extends StatelessWidget {
                 Text(
                   '${OrderHistoryFormatters.formatShortDayMonth(order.scheduledAt)}, ${OrderHistoryFormatters.formatTime(order.scheduledAt)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: secondaryTextColor,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -179,7 +167,7 @@ class _OrderHistoryCard extends StatelessWidget {
                   child: Text(
                     order.serviceName,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: textColor,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
                     ),
@@ -189,7 +177,7 @@ class _OrderHistoryCard extends StatelessWidget {
                 Text(
                   OrderHistoryFormatters.formatPrice(order.price),
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: textColor,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -201,7 +189,7 @@ class _OrderHistoryCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: secondaryTextColor,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -221,7 +209,7 @@ class _HistoryHeaderCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
       ),
       child: Row(
@@ -230,10 +218,11 @@ class _HistoryHeaderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.12),
+              color: AppColors.softBlue,
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.history, color: AppColors.secondary),
+            child: const Icon(Icons.history, color: AppColors.primary),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -241,8 +230,9 @@ class _HistoryHeaderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'История уборки',
+                  'История уборок',
                   style: theme.textTheme.titleLarge?.copyWith(
+                    fontFamily: 'LovelaceText',
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -289,12 +279,12 @@ class _HistoryErrorCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
         message,
-        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+        style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger),
       ),
     );
   }
@@ -310,7 +300,7 @@ class _HistoryEmptyCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(

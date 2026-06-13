@@ -148,8 +148,6 @@ class _OrderHistoryDetailCard extends StatelessWidget {
               value: order.roomsDescription!,
             ),
           _DetailItem(label: 'Адрес', value: order.address),
-          if (order.district != null && order.district!.isNotEmpty)
-            _DetailItem(label: 'Район', value: order.district!),
           _DetailItem(
             label: 'Дата и время',
             value: OrderHistoryFormatters.formatFullDateTime(order.scheduledAt),
@@ -240,27 +238,27 @@ class _CleanerCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.secondary.withValues(alpha: 0.15),
+            backgroundColor: AppColors.softBlue,
             child: hasCleanerAssigned
                 ? cleaner.avatarAsset != null
                       ? ClipOval(child: Image.asset(cleaner.avatarAsset!))
                       : Text(
                           initials,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: AppColors.secondary,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                           ),
                         )
                 : const Icon(
                     Icons.person_outline,
-                    color: AppColors.secondary,
+                    color: AppColors.primary,
                     size: 28,
                   ),
           ),

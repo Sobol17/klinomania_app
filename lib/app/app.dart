@@ -22,10 +22,10 @@ import '../src/features/orders/domain/repositories/order_history_repository.dart
 import '../src/features/orders/presentation/controllers/cleaner_order_history_controller.dart';
 import '../src/features/orders/presentation/controllers/cleaner_orders_controller.dart';
 import '../src/features/orders/presentation/controllers/order_history_controller.dart';
-import '../src/features/profile/presentation/controllers/profile_controller.dart';
 import '../src/features/profile/data/datasources/profile_remote_data_source.dart';
 import '../src/features/profile/data/repositories/profile_repository_impl.dart';
 import '../src/features/profile/domain/repositories/profile_repository.dart';
+import '../src/features/profile/presentation/controllers/profile_controller.dart';
 import '../src/features/services/data/datasources/services_remote_data_source.dart';
 import '../src/features/services/data/repositories/services_repository_impl.dart';
 import '../src/features/services/domain/repositories/services_repository.dart';
@@ -117,7 +117,7 @@ class App extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Time2Clean',
+        title: 'Klinomania',
         theme: AppTheme.lightTheme,
         home: const AuthPage(),
       ),

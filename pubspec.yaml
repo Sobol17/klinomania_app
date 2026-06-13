@@ -1,5 +1,5 @@
-name: time2clean
-description: "A new Flutter project."
+name: klinomania
+description: 'A new Flutter project.'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -61,4 +61,11 @@ flutter:
     - assets/icons/
     - assets/icons/navigation/
     - assets/images/
-    
+  fonts:
+    - family: LovelaceText
+      fonts:
+        - asset: assets/fonts/Zetafonts - Lovelace Text Regular.otf
+          weight: 400
+        - asset: assets/fonts/Zetafonts - Lovelace Text Bold Italic.otf
+          weight: 700
+          style: italic

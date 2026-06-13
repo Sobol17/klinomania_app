@@ -10,7 +10,6 @@ class ClientProfileModel {
     required this.dateOfBirth,
     required this.role,
     required this.address,
-    required this.district,
     required this.description,
     required this.createdAt,
     required this.updatedAt,
@@ -23,7 +22,6 @@ class ClientProfileModel {
   final DateTime? dateOfBirth;
   final UserRole role;
   final String address;
-  final String district;
   final String description;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -39,7 +37,6 @@ class ClientProfileModel {
       dateOfBirth: _parseDate(json['date_of_birth'] ?? json['dateOfBirth']),
       role: UserRoleSerializer.fromJson(roleValue is String ? roleValue : null),
       address: json['address'] as String? ?? '',
-      district: json['district'] as String? ?? '',
       description: json['description'] as String? ?? '',
       createdAt: _parseDate(json['created_at'] ?? json['createdAt']),
       updatedAt: _parseDate(json['updated_at'] ?? json['updatedAt']),
@@ -55,7 +52,6 @@ class ClientProfileModel {
       dateOfBirth: dateOfBirth,
       role: role,
       address: address,
-      district: district,
       description: description,
       createdAt: createdAt,
       updatedAt: updatedAt,

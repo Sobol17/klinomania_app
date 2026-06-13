@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:klinomania/src/core/theme/app_colors.dart';
 
 import 'auth_brand_card.dart';
 import 'cta_button.dart';
@@ -22,21 +22,19 @@ class WelcomeStep extends StatelessWidget {
         const SizedBox(height: 40),
         const AuthBrandCard(),
         const SizedBox(height: 48),
-        CTAButton(
-          label: 'Я Клинер',
-          onPressed: onSelectCleaner,
-          leading: SvgPicture.asset(
-            'assets/icons/cleaning.svg',
-            height: 20,
-            width: 20,
-          ),
-        ),
+        CTAButton(label: 'Начать уборку', onPressed: onSelectClient),
         const SizedBox(height: 16),
-        CTAButton(
-          label: 'Я Клиент',
-          onPressed: onSelectClient,
-          variant: CTAButtonVariant.outline,
-          leading: Icon(Icons.person_outline, color: theme.colorScheme.primary),
+        Center(
+          child: TextButton(
+            onPressed: onSelectCleaner,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              textStyle: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            child: const Text('Войти как клинер'),
+          ),
         ),
         const SizedBox(height: 32),
       ],

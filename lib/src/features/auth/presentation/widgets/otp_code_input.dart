@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 class OtpCodeInput extends StatefulWidget {
   const OtpCodeInput({
     super.key,
@@ -61,12 +63,11 @@ class _OtpCodeInputState extends State<OtpCodeInput> {
               LengthLimitingTextInputFormatter(1),
             ],
             decoration: InputDecoration(
-              hintText: '34',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFFE1E5EE)),
+                borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+                borderSide: const BorderSide(color: AppColors.fieldBorder),
               ),
             ),
             onChanged: (value) => _handleChanged(index, value),

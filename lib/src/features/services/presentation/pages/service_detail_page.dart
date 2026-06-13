@@ -8,9 +8,9 @@ import '../../../home/domain/entities/cleaning_service.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/widgets/home_background.dart';
 import '../../../orders/presentation/pages/order_checkout_page.dart';
-import '../controllers/services_controller.dart';
 import '../../domain/service_detail_config.dart';
 import '../../domain/service_detail_presets.dart';
+import '../controllers/services_controller.dart';
 
 class ServiceDetailPage extends StatefulWidget {
   const ServiceDetailPage({super.key, required this.service});
@@ -106,6 +106,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                                 service: service,
                                 config: config,
                               ),
+                              if (config.description.trim().isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                _ServiceDescriptionCard(
+                                  description: config.description,
+                                ),
+                              ],
                               if (isLoading &&
                                   servicesController.detailConfig(
                                         widget.service.id,
@@ -293,12 +299,16 @@ class _HeroSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                  Icon(
+                    Icons.arrow_back_ios_new,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Назад',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
@@ -313,7 +323,7 @@ class _HeroSection extends StatelessWidget {
             child: Text(
               service.title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
+                color: AppColors.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -368,7 +378,7 @@ class _HeroImageBackground extends StatelessWidget {
           )
         else
           placeholder(),
-        Container(color: Colors.black.withValues(alpha: 0.1)),
+        Container(color: AppColors.primary.withValues(alpha: 0.08)),
       ],
     );
   }
@@ -396,7 +406,7 @@ class _HeroPlaceholder extends StatelessWidget {
           child: Icon(
             config.heroIcon,
             size: 72,
-            color: Colors.white.withValues(alpha: 0.8),
+            color: AppColors.primary.withValues(alpha: 0.32),
           ),
         ),
       ),
@@ -412,48 +422,23 @@ class _ServiceInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool dark = config.darkCard;
-    final Color background = dark ? AppColors.darkCard : Colors.white;
-    final Color textColor = dark ? Colors.white : AppColors.textPrimary;
-    final Color secondary = dark
-        ? Colors.white.withValues(alpha: 0.8)
-        : AppColors.textSecondary;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: dark ? 0.3 : 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 16),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  service.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: textColor,
-                  ),
-                ),
-              ),
-              Text(
-                'Прибытие через: ${config.arrivalMinutes} мин',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: secondary),
-              ),
-            ],
+          Text(
+            service.title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -463,21 +448,55 @@ class _ServiceInfoCard extends StatelessWidget {
               _InfoPill(
                 icon: Icons.person_outline,
                 label: service.cleaners,
-                dark: dark,
+                dark: false,
               ),
               _InfoPill(
                 icon: Icons.schedule,
                 label: service.duration,
-                dark: dark,
+                dark: false,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceDescriptionCard extends StatelessWidget {
+  const _ServiceDescriptionCard({required this.description});
+
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            config.description,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: secondary),
+            'Описание',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
           ),
         ],
       ),
@@ -557,7 +576,7 @@ class _HouseOptions extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppStyle.cardRadius),
             border: Border.all(color: AppColors.border),
           ),
           child: Column(
@@ -565,7 +584,7 @@ class _HouseOptions extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.square_foot, color: AppColors.secondary),
+                  const Icon(Icons.square_foot, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Площадь',
@@ -631,11 +650,9 @@ class _SelectableCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Color borderColor = selected
-        ? AppColors.secondary
+        ? AppColors.primary
         : AppColors.border.withValues(alpha: 0.8);
-    final Color background = selected
-        ? AppColors.secondary.withValues(alpha: 0.08)
-        : Colors.white;
+    final Color background = selected ? AppColors.softBlue : AppColors.surface;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 120),
@@ -645,7 +662,7 @@ class _SelectableCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppStyle.cardRadius),
             border: Border.all(color: borderColor, width: selected ? 1.5 : 1),
           ),
           child: Column(
@@ -681,7 +698,7 @@ class _SelectableCard extends StatelessWidget {
                   selected ? 'Включено' : 'Отключено',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: selected
-                        ? AppColors.secondary
+                        ? AppColors.primary
                         : AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -709,15 +726,16 @@ class _InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color background = dark
-        ? Colors.white.withValues(alpha: 0.1)
-        : AppColors.background;
-    final Color textColor = dark ? Colors.white : AppColors.textPrimary;
+        ? AppColors.white.withValues(alpha: 0.12)
+        : AppColors.softBlue;
+    final Color textColor = dark ? AppColors.white : AppColors.textPrimary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+        border: dark ? null : Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -751,10 +769,10 @@ class _SelectionIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: active ? AppColors.secondary : AppColors.border,
+          color: active ? AppColors.primary : AppColors.border,
           width: 2,
         ),
-        color: active ? AppColors.secondary : Colors.transparent,
+        color: active ? AppColors.primary : Colors.transparent,
       ),
     );
   }
@@ -798,7 +816,7 @@ class _RoundIconButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: AppColors.surface,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border),
         ),
@@ -827,7 +845,7 @@ class _DetailStatusCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
       ),
       child: Row(
@@ -866,14 +884,8 @@ class _BottomActionBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + padding),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 20,
-            offset: Offset(0, -8),
-          ),
-        ],
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: CTAButton(label: 'Продолжить', onPressed: onPressed),
     );

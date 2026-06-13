@@ -220,15 +220,8 @@ class _OrderHeaderCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 16),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +258,7 @@ class _InfoChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -313,7 +306,7 @@ class _InfoField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
@@ -338,7 +331,7 @@ class _AreaRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -417,7 +410,7 @@ class _ServiceCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(

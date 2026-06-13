@@ -8,8 +8,8 @@ class CleanerOrdersRepositoryImpl implements CleanerOrdersRepository {
   final CleanerOrdersRemoteDataSource remoteDataSource;
 
   @override
-  Future<List<CleanerOrder>> fetchOrders({String? district}) async {
-    final items = await remoteDataSource.fetchOrders(district: district);
+  Future<List<CleanerOrder>> fetchOrders() async {
+    final items = await remoteDataSource.fetchOrders();
     return items.map((item) => item.toEntity()).toList();
   }
 

@@ -3,7 +3,14 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-enum AuthStep { welcome, phoneInput, otpInput, infoFill, authenticated }
+enum AuthStep {
+  welcome,
+  phoneInput,
+  otpInput,
+  infoFill,
+  cleanerLogin,
+  authenticated,
+}
 
 class AuthController extends ChangeNotifier {
   AuthController({required this.repository, this.useApi = true});
@@ -20,7 +27,6 @@ class AuthController extends ChangeNotifier {
   String? _lastSubmittedName;
   String? _lastSubmittedEmail;
   String? _lastSubmittedAddress;
-  String? _lastSubmittedDistrict;
 
   AuthStep get step => _step;
   bool get isLoading => _isLoading;
@@ -32,7 +38,6 @@ class AuthController extends ChangeNotifier {
   String? get lastSubmittedName => _lastSubmittedName;
   String? get lastSubmittedEmail => _lastSubmittedEmail;
   String? get lastSubmittedAddress => _lastSubmittedAddress;
-  String? get lastSubmittedDistrict => _lastSubmittedDistrict;
 
   void _setStep(AuthStep step) {
     _step = step;
@@ -41,7 +46,17 @@ class AuthController extends ChangeNotifier {
 
   void start(UserRole role) {
     _role = role;
+    if (role == UserRole.cleaner) {
+      _setStep(AuthStep.cleanerLogin);
+      return;
+    }
     _setStep(AuthStep.phoneInput);
+  }
+
+  void startCleanerLogin() {
+    _role = UserRole.cleaner;
+    _errorMessage = null;
+    _setStep(AuthStep.cleanerLogin);
   }
 
   void backToWelcome() {
@@ -54,6 +69,11 @@ class AuthController extends ChangeNotifier {
   void backToPhone() {
     _errorMessage = null;
     _setStep(AuthStep.phoneInput);
+  }
+
+  void backToCleanerLogin() {
+    _errorMessage = null;
+    _setStep(AuthStep.cleanerLogin);
   }
 
   void clearError() {
@@ -158,11 +178,49 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> submitCleanerCredentials({
+    required String phone,
+    required String password,
+  }) async {
+    _phoneNumber = phone;
+    _role = UserRole.cleaner;
+    _errorMessage = null;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      AuthSession session;
+      if (useApi) {
+        session = await repository.loginCleaner(
+          phoneNumber: phone,
+          password: password,
+        );
+      } else {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        session = AuthSession(
+          accessToken:
+              'offline_cleaner_${DateTime.now().millisecondsSinceEpoch}',
+          tokenType: 'Bearer',
+          phoneNumber: phone,
+          isNewUser: false,
+          role: UserRole.cleaner,
+        );
+      }
+
+      await repository.saveSession(session);
+      _applySession(session);
+    } catch (error) {
+      _errorMessage = _mapError(error);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> completeInfoFill({
     required String name,
     required String email,
     required String address,
-    required String district,
   }) async {
     _errorMessage = null;
     _isLoading = true;
@@ -172,13 +230,11 @@ class AuthController extends ChangeNotifier {
       _lastSubmittedName = name;
       _lastSubmittedEmail = email;
       _lastSubmittedAddress = address;
-      _lastSubmittedDistrict = district;
       if (useApi) {
         await repository.completeProfile(
           name: name,
           email: email,
           address: address,
-          district: district,
         );
       } else {
         await Future<void>.delayed(const Duration(milliseconds: 500));

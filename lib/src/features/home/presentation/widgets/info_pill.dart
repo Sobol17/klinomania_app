@@ -17,15 +17,16 @@ class InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color background = dark
-        ? Colors.white.withValues(alpha: 0.08)
-        : AppColors.background;
-    final Color textColor = dark ? Colors.white : AppColors.textSecondary;
+        ? AppColors.white.withValues(alpha: 0.12)
+        : AppColors.softBlue;
+    final Color textColor = dark ? AppColors.white : AppColors.textPrimary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+        border: dark ? null : Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,4 @@
-package com.example.time2clean
+package com.example.klinomania
 
 import io.flutter.embedding.android.FlutterActivity
 

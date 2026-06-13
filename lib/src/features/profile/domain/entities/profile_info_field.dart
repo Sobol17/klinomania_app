@@ -1,4 +1,4 @@
-enum ProfileInfoFieldType { name, phone, email, address, district, description }
+enum ProfileInfoFieldType { name, phone, email, address, description }
 
 class ProfileInfoField {
   const ProfileInfoField({

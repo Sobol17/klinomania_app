@@ -5,18 +5,17 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/bottom_navigation_bar.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../orders/presentation/pages/cleaner_orders_page.dart';
 import '../../../orders/presentation/pages/cleaner_order_history_page.dart';
+import '../../../orders/presentation/pages/cleaner_orders_page.dart';
 import '../../../orders/presentation/pages/order_history_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
-import '../../../services/presentation/pages/service_detail_page.dart';
 import '../../../services/presentation/controllers/services_controller.dart';
+import '../../../services/presentation/pages/service_detail_page.dart';
 import '../../domain/entities/cleaning_service.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_background.dart';
 import '../widgets/home_service_card.dart';
 import '../widgets/home_status_row.dart';
-import '../widgets/promo_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -107,9 +106,6 @@ class _HomeTabState extends State<_HomeTab> {
                     return _ServiceColumns(services: services);
                   },
                 ),
-                const SizedBox(height: 28),
-                const PromoCard(),
-                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -140,19 +136,22 @@ class _ServiceColumns extends StatelessWidget {
 
     return Column(
       children: [
-        Row(
-          children: [
-            if (left.isNotEmpty)
-              Expanded(
-                child: _buildServiceCard(context, left[0], minHeight: 180),
-              ),
-            if (left.isNotEmpty && right.isNotEmpty)
-              const SizedBox(width: _spacing),
-            if (right.isNotEmpty)
-              Expanded(
-                child: _buildServiceCard(context, right[0], minHeight: 180),
-              ),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (left.isNotEmpty)
+                Expanded(
+                  child: _buildServiceCard(context, left[0], minHeight: 180),
+                ),
+              if (left.isNotEmpty && right.isNotEmpty)
+                const SizedBox(width: _spacing),
+              if (right.isNotEmpty)
+                Expanded(
+                  child: _buildServiceCard(context, right[0], minHeight: 180),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: _spacing),
         if (left.length > 1)
@@ -168,19 +167,22 @@ class _ServiceColumns extends StatelessWidget {
           ),
         const SizedBox(height: _spacing),
         if (left.length > 2 || right.length > 2)
-          Row(
-            children: [
-              if (left.length > 2)
-                Expanded(
-                  child: _buildServiceCard(context, left[2], minHeight: 140),
-                ),
-              if (left.length > 2 && right.length > 2)
-                const SizedBox(width: _spacing),
-              if (right.length > 2)
-                Expanded(
-                  child: _buildServiceCard(context, right[2], minHeight: 150),
-                ),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (left.length > 2)
+                  Expanded(
+                    child: _buildServiceCard(context, left[2], minHeight: 140),
+                  ),
+                if (left.length > 2 && right.length > 2)
+                  const SizedBox(width: _spacing),
+                if (right.length > 2)
+                  Expanded(
+                    child: _buildServiceCard(context, right[2], minHeight: 150),
+                  ),
+              ],
+            ),
           ),
       ],
     );
@@ -226,7 +228,7 @@ class _ServicesStateCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppStyle.panelRadius),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
       ),
       child: Row(

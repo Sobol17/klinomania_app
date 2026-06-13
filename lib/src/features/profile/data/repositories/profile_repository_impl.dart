@@ -18,14 +18,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String? name,
     String? email,
     String? address,
-    String? district,
     String? description,
   }) async {
     final profile = await remoteDataSource.updateProfile(
       name: name,
       email: email,
       address: address,
-      district: district,
       description: description,
     );
     return profile.toEntity();

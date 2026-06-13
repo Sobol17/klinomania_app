@@ -6,7 +6,6 @@ class OrderHistoryItemModel {
     required this.status,
     required this.propertyType,
     required this.address,
-    required this.district,
     required this.entrance,
     required this.floor,
     required this.apartment,
@@ -24,7 +23,6 @@ class OrderHistoryItemModel {
   final String status;
   final String propertyType;
   final String address;
-  final String? district;
   final String? entrance;
   final String? floor;
   final String? apartment;
@@ -43,7 +41,6 @@ class OrderHistoryItemModel {
       status: json['status']?.toString() ?? '',
       propertyType: json['property_type']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
-      district: json['district']?.toString(),
       entrance: json['entrance']?.toString(),
       floor: json['floor']?.toString(),
       apartment: json['apartment']?.toString(),
@@ -85,7 +82,6 @@ class OrderHistoryItemModel {
       serviceName: serviceName,
       cleaningType: cleaningLabel,
       address: formattedAddress,
-      district: district,
       price: totalPrice,
       paymentMethod: mappedPayment,
       scheduledAt: scheduledAt,

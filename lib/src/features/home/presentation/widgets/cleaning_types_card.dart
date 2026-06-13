@@ -14,14 +14,8 @@ class CleaningTypesCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.06),
-            blurRadius: 25,
-            offset: const Offset(0, 15),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppStyle.panelRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,12 +38,15 @@ class CleaningTypesCard extends StatelessWidget {
                 onSelected: (_) => controller.selectCleaningType(type),
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
-                  color: selected ? Colors.white : AppColors.textSecondary,
+                  color: selected ? AppColors.white : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
-                backgroundColor: AppColors.background,
+                backgroundColor: AppColors.surface,
                 side: BorderSide(
                   color: selected ? AppColors.primary : AppColors.border,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppStyle.inputRadius),
                 ),
               );
             }).toList(),

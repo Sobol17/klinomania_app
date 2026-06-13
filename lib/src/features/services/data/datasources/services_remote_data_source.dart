@@ -7,22 +7,26 @@ class ServicesRemoteDataSource {
   final List<ServiceDetailModel> _services = [
     ServiceDetailModel(
       id: 'standard',
-      title: 'Стандарт',
-      subtitle: 'Регулярная уборка квартиры',
-      shortDescription: 'Поддержим чистоту в основных зонах.',
+      title: 'Базовый минимум',
+      subtitle: 'Оптимальный выбор для регулярного поддержания чистоты.',
+      shortDescription:
+          'Оптимальный выбор для регулярного поддержания чистоты.',
       description:
-          'Пыль, полы, кухня, санузел и аккуратная расстановка вещей на видимых поверхностях.',
+          'Оптимальный выбор для регулярного поддержания чистоты.\n\n'
+          'Стремянка и парогенератор при этом тарифе не включены, '
+          'предоставляются по запросу.\n\n'
+          'Стоимость для однокомнатной квартиры.',
       cleanersLabel: '1 клинер',
       durationLabel: '2-3 часа',
-      priceFrom: 2900,
+      priceFrom: 7700,
       imageUrl: null,
       gallery: const [],
       pricing: const ServicePricingModel(
-        basePrice: 1200,
-        pricePerSqm: 35,
+        basePrice: 7700,
+        pricePerSqm: 0,
         minArea: 30,
         maxArea: 160,
-        minPrice: 2900,
+        minPrice: 7700,
       ),
       roomOptions: const [
         ServiceOptionModel(
@@ -75,22 +79,26 @@ class ServicesRemoteDataSource {
     ),
     ServiceDetailModel(
       id: 'premium',
-      title: 'Премиум',
-      subtitle: 'Глубокая уборка с вниманием к деталям',
-      shortDescription: 'Для сложных загрязнений и подготовки квартиры.',
+      title: 'Генеральская',
+      subtitle:
+          'Тщательная уборка для возвращения идеального порядка в каждом углу.',
+      shortDescription:
+          'Тщательная уборка для возвращения идеального порядка в каждом углу.',
       description:
-          'Расширенный набор работ, включая труднодоступные места, фасады и деликатные поверхности.',
+          'Тщательная уборка для возвращения идеального порядка в каждом углу.\n\n'
+          'Мы отмываем плитку и швы, фасады мебели, сантехнику и все комнаты.\n\n'
+          'Стоимость для однокомнатной квартиры.',
       cleanersLabel: '2 клинера',
       durationLabel: '4-6 часов',
-      priceFrom: 5900,
+      priceFrom: 18000,
       imageUrl: null,
       gallery: const [],
       pricing: const ServicePricingModel(
-        basePrice: 2500,
-        pricePerSqm: 55,
+        basePrice: 18000,
+        pricePerSqm: 0,
         minArea: 30,
         maxArea: 220,
-        minPrice: 5900,
+        minPrice: 18000,
       ),
       roomOptions: const [],
       cleaningOptions: const [],
@@ -100,22 +108,26 @@ class ServicesRemoteDataSource {
     ),
     ServiceDetailModel(
       id: 'cottage',
-      title: 'Коттедж',
-      subtitle: 'Уборка домов и больших помещений',
-      shortDescription: 'Настраиваем объём работ под площадь дома.',
+      title: 'Роскошный максимум',
+      subtitle: 'Максимальный уровень чистоты. Мойка окон включена в тариф.',
+      shortDescription:
+          'Максимальный уровень чистоты. Мойка окон включена в тариф.',
       description:
-          'Поддерживающая, генеральная уборка или уборка после ремонта для частного дома.',
+          'Максимальный уровень чистоты. Мойка окон включена в тариф.\n\n'
+          'Включены: уборка балкона, уход за растениями, животными, '
+          'мелкие поручения.\n\n'
+          'Стоимость для однокомнатной квартиры.',
       cleanersLabel: '2-4 клинера',
       durationLabel: 'от 5 часов',
-      priceFrom: 9900,
+      priceFrom: 25000,
       imageUrl: null,
       gallery: const [],
       pricing: const ServicePricingModel(
-        basePrice: 3500,
-        pricePerSqm: 45,
+        basePrice: 25000,
+        pricePerSqm: 0,
         minArea: 60,
         maxArea: 600,
-        minPrice: 9900,
+        minPrice: 25000,
       ),
       roomOptions: const [],
       cleaningOptions: const [

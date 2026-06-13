@@ -6,7 +6,6 @@ abstract class ProfileRepository {
     String? name,
     String? email,
     String? address,
-    String? district,
     String? description,
   });
 }

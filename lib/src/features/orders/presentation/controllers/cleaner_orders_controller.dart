@@ -21,12 +21,10 @@ class CleanerOrdersController extends ChangeNotifier {
   String? _startingOrderId;
   String? _completingOrderId;
   final Set<String> _startedOrderIds = <String>{};
-  String? _districtFilter;
 
   List<CleanerOrder> get orders => _orders;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  String? get districtFilter => _districtFilter;
   bool isAccepting(String orderId) => _acceptingOrderId == orderId;
   bool isStarting(String orderId) => _startingOrderId == orderId;
   bool isCompleting(String orderId) => _completingOrderId == orderId;
@@ -48,7 +46,7 @@ class CleanerOrdersController extends ChangeNotifier {
 
     try {
       if (useApi) {
-        _orders = await repository.fetchOrders(district: _districtFilter);
+        _orders = await repository.fetchOrders();
       } else {
         _orders = buildMockCleanerOrders();
       }
@@ -63,16 +61,6 @@ class CleanerOrdersController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  void setDistrictFilter(String? district) {
-    final normalized = district?.trim();
-    final resolved = normalized != null && normalized.isNotEmpty
-        ? normalized
-        : null;
-    if (resolved == _districtFilter) return;
-    _districtFilter = resolved;
-    loadOrders();
   }
 
   Future<String?> acceptOrder(String orderId) async {

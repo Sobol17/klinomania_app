@@ -4,12 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/bottom_navigation_bar.dart';
-import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../../home/domain/entities/cleaning_service.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/widgets/home_background.dart';
-import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../../services/domain/service_detail_config.dart';
 import '../controllers/order_history_controller.dart';
 import '../utils/order_history_formatters.dart';
@@ -37,14 +35,6 @@ class OrderCheckoutPage extends StatefulWidget {
 }
 
 class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
-  static const List<String> _districtOptions = [
-    'Центральный',
-    'Северный',
-    'Южный',
-    'Восточный',
-    'Западный',
-  ];
-
   late double _area;
   late final TextEditingController _addressController;
   late final TextEditingController _entranceController;
@@ -57,8 +47,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   late String _paymentMethod;
   bool _isSubmitting = false;
   String? _errorMessage;
-  String? _selectedDistrict;
-  bool _hasEditedDistrict = false;
 
   final List<String> _paymentMethods = const ['СБП', 'ПОДЕЛИ', 'плати', 'Нал'];
   static const double _fallbackTotalPrice = 7500;
@@ -69,9 +57,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     _addressController = TextEditingController(
       text: 'Кутузовский проспект, 23к2',
     );
-    final authController = context.read<AuthController>();
-    _selectedDistrict = authController.lastSubmittedDistrict;
-    context.read<ProfileController>().ensureLoaded();
     _entranceController = TextEditingController(text: '1');
     _floorController = TextEditingController(text: '14');
     _apartmentController = TextEditingController(text: '44');
@@ -95,8 +80,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final profileController = context.watch<ProfileController>();
-    _maybePrefillDistrict(profileController);
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: Consumer<HomeController>(
@@ -130,7 +113,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                         const SizedBox(height: 16),
                         _AddressSection(
                           addressController: _addressController,
-                          districtField: _buildDistrictField(context),
                           entranceController: _entranceController,
                           floorController: _floorController,
                           apartmentController: _apartmentController,
@@ -218,15 +200,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
       _isSubmitting = true;
       _errorMessage = null;
     });
-
-    final district = _selectedDistrict?.trim() ?? '';
-    if (district.isEmpty) {
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = 'Укажите район';
-      });
-      return;
-    }
 
     try {
       await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -341,7 +314,9 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppStyle.cardRadius),
+        ),
       ),
       builder: (context) => _AreaEditSheet(initialArea: _area),
     );
@@ -349,123 +324,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
       return;
     }
     setState(() => _area = newArea);
-  }
-
-  void _maybePrefillDistrict(ProfileController profileController) {
-    if (_hasEditedDistrict) return;
-    final district = profileController.profile?.district;
-    if (district == null || district.trim().isEmpty) {
-      return;
-    }
-    if ((_selectedDistrict ?? '').trim() == district.trim()) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _hasEditedDistrict) return;
-      setState(() => _selectedDistrict = district);
-    });
-  }
-
-  Widget _buildDistrictField(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    final bool isCupertino =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-    if (isCupertino) {
-      return _CupertinoDistrictField(
-        value: _selectedDistrict,
-        onTap: _openCupertinoDistrictPicker,
-      );
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: _selectedDistrict,
-      isExpanded: true,
-      decoration: const InputDecoration(labelText: 'Район'),
-      items: _districtOptions
-          .map(
-            (district) => DropdownMenuItem<String>(
-              value: district,
-              child: Text(district),
-            ),
-          )
-          .toList(),
-      onChanged: (value) {
-        setState(() {
-          _errorMessage = null;
-          _hasEditedDistrict = true;
-          _selectedDistrict = value;
-        });
-      },
-    );
-  }
-
-  void _openCupertinoDistrictPicker() {
-    FocusScope.of(context).unfocus();
-    final current = _selectedDistrict;
-    final initialIndex = current != null
-        ? _districtOptions.indexOf(current)
-        : 0;
-    final resolvedIndex = initialIndex >= 0 ? initialIndex : 0;
-    int tempIndex = resolvedIndex;
-
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) {
-        final separatorColor = CupertinoColors.separator.resolveFrom(context);
-        final controller = FixedExtentScrollController(
-          initialItem: resolvedIndex,
-        );
-        return Container(
-          height: 280,
-          color: CupertinoColors.systemBackground.resolveFrom(context),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 44,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Отмена'),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          setState(() {
-                            _errorMessage = null;
-                            _hasEditedDistrict = true;
-                            _selectedDistrict = _districtOptions[tempIndex];
-                          });
-                        },
-                        child: const Text('Готово'),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(height: 1, color: separatorColor),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: controller,
-                    itemExtent: 36,
-                    onSelectedItemChanged: (index) {
-                      tempIndex = index;
-                    },
-                    children: _districtOptions
-                        .map((district) => Center(child: Text(district)))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 }
 
@@ -519,7 +377,7 @@ class _ServiceSummary extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -549,7 +407,6 @@ class _ServiceSummary extends StatelessWidget {
 class _AddressSection extends StatelessWidget {
   const _AddressSection({
     required this.addressController,
-    required this.districtField,
     required this.entranceController,
     required this.floorController,
     required this.apartmentController,
@@ -558,7 +415,6 @@ class _AddressSection extends StatelessWidget {
   });
 
   final TextEditingController addressController;
-  final Widget districtField;
   final TextEditingController entranceController;
   final TextEditingController floorController;
   final TextEditingController apartmentController;
@@ -584,8 +440,6 @@ class _AddressSection extends StatelessWidget {
           keyboardType: TextInputType.streetAddress,
           textInputAction: TextInputAction.next,
         ),
-        const SizedBox(height: 12),
-        districtField,
         const SizedBox(height: 12),
         Row(
           children: [
@@ -867,12 +721,10 @@ class _PaymentSection extends StatelessWidget {
                       vertical: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: active
-                          ? AppColors.secondary.withValues(alpha: 0.1)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
+                      color: active ? AppColors.softBlue : AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppStyle.inputRadius),
                       border: Border.all(
-                        color: active ? AppColors.secondary : AppColors.border,
+                        color: active ? AppColors.primary : AppColors.border,
                       ),
                     ),
                     child: Row(
@@ -885,7 +737,7 @@ class _PaymentSection extends StatelessWidget {
                             margin: const EdgeInsets.only(right: 8),
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.secondary,
+                              color: AppColors.primary,
                             ),
                           ),
                         Text(
@@ -926,14 +778,8 @@ class _CheckoutBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + padding),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 20,
-            offset: Offset(0, -8),
-          ),
-        ],
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -943,7 +789,7 @@ class _CheckoutBar extends StatelessWidget {
               errorMessage!,
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.danger),
             ),
             const SizedBox(height: 8),
           ],
@@ -985,13 +831,14 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.softBlue,
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: AppColors.secondary),
+          Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 6),
           Text(
             label,
@@ -1036,50 +883,18 @@ class _OrderTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          borderSide: const BorderSide(color: AppColors.fieldBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.secondary),
-        ),
-      ),
-    );
-  }
-}
-
-class _CupertinoDistrictField extends StatelessWidget {
-  const _CupertinoDistrictField({required this.value, required this.onTap});
-
-  final String? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bool hasValue = value != null && value!.isNotEmpty;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Район',
-          suffixIcon: Icon(Icons.expand_more),
-        ),
-        isEmpty: !hasValue,
-        child: Text(
-          hasValue ? value! : 'Выберите район',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: hasValue
-                ? theme.textTheme.bodyMedium?.color
-                : Colors.black54,
-          ),
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
     );
@@ -1098,7 +913,7 @@ class _CupertinoPickerSheet<T> extends StatelessWidget {
       top: false,
       child: Container(
         height: 320,
-        color: Colors.white,
+        color: AppColors.surface,
         child: Column(
           children: [
             Align(
@@ -1138,9 +953,9 @@ class _DropdownField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          border: Border.all(color: AppColors.fieldBorder),
         ),
         child: Row(
           children: [
@@ -1176,8 +991,8 @@ class _EditableTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          border: Border.all(color: AppColors.fieldBorder),
         ),
         child: Row(
           children: [
@@ -1218,16 +1033,14 @@ class _SelectionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.secondary : AppColors.textSecondary;
+    final color = selected ? AppColors.primary : AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
-        color: selected
-            ? AppColors.secondary.withValues(alpha: 0.08)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: selected ? AppColors.softBlue : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
         border: Border.all(
-          color: selected ? AppColors.secondary : AppColors.border,
+          color: selected ? AppColors.primary : AppColors.border,
         ),
       ),
       child: Row(
@@ -1240,7 +1053,7 @@ class _SelectionChip extends StatelessWidget {
               margin: const EdgeInsets.only(right: 8),
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.secondary,
+                color: AppColors.primary,
               ),
             ),
           Text(

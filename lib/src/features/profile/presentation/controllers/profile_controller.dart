@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../domain/entities/client_profile.dart';
-import '../../domain/entities/profile_info_field.dart';
 import '../../domain/entities/profile_menu_item.dart';
 import '../../domain/repositories/profile_repository.dart';
 
@@ -25,10 +24,42 @@ class ProfileController extends ChangeNotifier {
 
   bool _prefersSlavicStaff = true;
 
-  final List<ProfileMenuItem> menuItems = const [
+  static const ProfileMenuItem _deleteMenuItem = ProfileMenuItem(
+    action: ProfileMenuAction.delete,
+    title: 'Удалить профиль',
+    isDestructive: true,
+  );
+
+  final List<ProfileMenuItem> primaryMenuItems = const [
+    ProfileMenuItem(
+      action: ProfileMenuAction.personalData,
+      title: 'Личные данные',
+    ),
+    ProfileMenuItem(action: ProfileMenuAction.history, title: 'Настройки'),
     ProfileMenuItem(action: ProfileMenuAction.history, title: 'История уборки'),
-    ProfileMenuItem(action: ProfileMenuAction.logout, title: 'Выйти'),
   ];
+
+  final List<ProfileMenuItem> supportMenuItems = const [
+    ProfileMenuItem(action: ProfileMenuAction.history, title: 'О нас'),
+    ProfileMenuItem(action: ProfileMenuAction.history, title: 'Контакты'),
+    ProfileMenuItem(
+      action: ProfileMenuAction.history,
+      title: 'Правовая информация',
+    ),
+    ProfileMenuItem(
+      action: ProfileMenuAction.logout,
+      title: 'Выйти из аккаунта',
+      isDestructive: true,
+    ),
+  ];
+
+  List<ProfileMenuItem> get menuItems => [
+    ...primaryMenuItems,
+    ...supportMenuItems,
+    _deleteMenuItem,
+  ];
+
+  ProfileMenuItem get deleteMenuItem => _deleteMenuItem;
 
   bool get prefersSlavicStaff => _prefersSlavicStaff;
   ClientProfile? get profile => _profile;
@@ -36,41 +67,6 @@ class ProfileController extends ChangeNotifier {
   bool get isSaving => _isSaving;
   String? get loadError => _loadError;
   String? get updateError => _updateError;
-
-  List<ProfileInfoField> get infoFields {
-    final profile = _profile;
-    return [
-      ProfileInfoField(
-        type: ProfileInfoFieldType.name,
-        label: 'Имя',
-        value: _valueOrDash(profile?.name),
-        isEditable: true,
-      ),
-      ProfileInfoField(
-        type: ProfileInfoFieldType.phone,
-        label: 'Номер телефона',
-        value: _valueOrDash(profile?.phone),
-      ),
-      ProfileInfoField(
-        type: ProfileInfoFieldType.email,
-        label: 'Эл. почта',
-        value: _valueOrDash(profile?.email),
-        isEditable: true,
-      ),
-      ProfileInfoField(
-        type: ProfileInfoFieldType.address,
-        label: 'Адрес',
-        value: _valueOrDash(profile?.address),
-        isEditable: true,
-      ),
-      ProfileInfoField(
-        type: ProfileInfoFieldType.district,
-        label: 'Район',
-        value: _valueOrDash(profile?.district),
-        isEditable: true,
-      ),
-    ];
-  }
 
   void ensureLoaded() {
     if (_hasLoaded || _isLoading) {
@@ -104,7 +100,6 @@ class ProfileController extends ChangeNotifier {
     String? name,
     String? email,
     String? address,
-    String? district,
     String? description,
   }) async {
     if (_isSaving) return false;
@@ -118,7 +113,6 @@ class ProfileController extends ChangeNotifier {
           name: name,
           email: email,
           address: address,
-          district: district,
           description: description,
         );
       } else {
@@ -131,7 +125,6 @@ class ProfileController extends ChangeNotifier {
           dateOfBirth: current.dateOfBirth,
           role: current.role,
           address: address ?? current.address,
-          district: district ?? current.district,
           description: description ?? current.description,
           createdAt: current.createdAt,
           updatedAt: DateTime.now(),
@@ -162,13 +155,6 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
-  static String _valueOrDash(String? value) {
-    if (value == null || value.isEmpty) {
-      return '-';
-    }
-    return value;
-  }
-
   static String _mapError(Object error) {
     if (error is StateError && error.message.isNotEmpty) {
       return error.message;
@@ -185,7 +171,6 @@ class ProfileController extends ChangeNotifier {
     dateOfBirth: null,
     role: UserRole.client,
     address: 'ул. Пушкина, 10',
-    district: 'Центральный',
     description:
         'Аккуратный и ответственный клинер. Быстро и качественно наведу порядок в любых помещениях.',
     createdAt: null,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../../../core/theme/app_colors.dart';
 
 class AuthBrandCard extends StatelessWidget {
   const AuthBrandCard({super.key});
@@ -10,27 +13,29 @@ class AuthBrandCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(220),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withAlpha((0.1 * 255).round()),
-            blurRadius: 40,
-            offset: const Offset(0, 25),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppStyle.panelRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset('assets/icons/logo.png'),
-          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 28),
+            child: SvgPicture.asset(
+              'assets/icons/logo.svg',
+              height: 112,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
+              color: AppColors.softBlue,
+              borderRadius: BorderRadius.circular(AppStyle.inputRadius),
               border: Border.all(
-                color: const Color(0xFF1F1F1F).withAlpha((0.2 * 255).round()),
+                color: AppColors.border.withValues(alpha: 0.8),
               ),
             ),
             child: Text(
@@ -45,7 +50,7 @@ class AuthBrandCard extends StatelessWidget {
           Text(
             'Быстро, чисто, удобно',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black.withAlpha((0.65 * 255).round()),
+              color: AppColors.textSecondary,
             ),
           ),
         ],

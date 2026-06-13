@@ -12,7 +12,6 @@ class ProfileRemoteDataSource {
     dateOfBirth: DateTime(1993, 5, 18),
     role: UserRole.client,
     address: 'ул. Ленина, 10',
-    district: 'Центральный',
     description: '',
     createdAt: DateTime(2026, 1),
     updatedAt: DateTime(2026, 2),
@@ -27,7 +26,6 @@ class ProfileRemoteDataSource {
     String? name,
     String? email,
     String? address,
-    String? district,
     String? description,
   }) async {
     await _mockDelay();
@@ -39,7 +37,6 @@ class ProfileRemoteDataSource {
       dateOfBirth: _profile.dateOfBirth,
       role: _profile.role,
       address: address ?? _profile.address,
-      district: district ?? _profile.district,
       description: description ?? _profile.description,
       createdAt: _profile.createdAt,
       updatedAt: DateTime.now(),

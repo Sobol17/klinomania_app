@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 enum CTAButtonVariant { filled, outline }
 
 class CTAButton extends StatelessWidget {
@@ -28,15 +30,17 @@ class CTAButton extends StatelessWidget {
     final BorderSide border;
 
     if (filled) {
-      background = enabled ? theme.colorScheme.primary : Colors.white;
-      textColor = enabled ? Colors.white : const Color(0xFF9EA4B4);
+      background = enabled ? AppColors.primary : AppColors.disabled;
+      textColor = enabled
+          ? AppColors.white
+          : AppColors.textPrimary.withValues(alpha: 0.38);
       border = BorderSide(
-        color: enabled ? Colors.transparent : const Color(0xFFE3E8F0),
+        color: enabled ? Colors.transparent : AppColors.border,
       );
     } else {
-      background = Colors.white;
-      textColor = theme.colorScheme.primary;
-      border = BorderSide(color: theme.colorScheme.primary, width: 1.5);
+      background = AppColors.surface;
+      textColor = AppColors.primary;
+      border = const BorderSide(color: AppColors.primary);
     }
 
     final Widget content = Row(
@@ -51,7 +55,7 @@ class CTAButton extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
               color: textColor,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -64,11 +68,11 @@ class CTAButton extends StatelessWidget {
       child: GestureDetector(
         onTap: enabled ? onPressed : null,
         child: Container(
-          height: 56,
+          height: AppStyle.buttonHeight,
           width: double.infinity,
           decoration: BoxDecoration(
             color: background,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppStyle.buttonRadius),
             border: Border.fromBorderSide(border),
           ),
           alignment: Alignment.center,

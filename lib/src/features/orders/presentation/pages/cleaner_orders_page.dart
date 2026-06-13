@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,17 +16,7 @@ class CleanerOrdersPage extends StatefulWidget {
 }
 
 class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
-  static const List<String> _districtOptions = [
-    'Центральный',
-    'Северный',
-    'Южный',
-    'Восточный',
-    'Западный',
-  ];
-  static const String _allDistrictLabel = 'Все районы';
-
   CleanerOrdersFilter _filter = CleanerOrdersFilter.myOrders;
-  String? _districtFilter;
 
   @override
   void initState() {
@@ -104,8 +93,6 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        _buildDistrictFilter(context, controller),
-                        const SizedBox(height: 20),
                         Text(
                           'Заказы',
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -117,7 +104,7 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
                           Text(
                             controller.errorMessage!,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.redAccent,
+                              color: AppColors.danger,
                             ),
                           ),
                         ],
@@ -150,119 +137,6 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
             .where((order) => order.isCompleted)
             .toList(growable: false);
     }
-  }
-
-  Widget _buildDistrictFilter(
-    BuildContext context,
-    CleanerOrdersController controller,
-  ) {
-    final platform = Theme.of(context).platform;
-    final bool isCupertino =
-        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
-    if (isCupertino) {
-      return _CupertinoDistrictField(
-        value: _districtFilterLabel(),
-        onTap: () => _openCupertinoDistrictPicker(controller),
-      );
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: _districtFilter,
-      isExpanded: true,
-      decoration: const InputDecoration(labelText: 'Район'),
-      items: [
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text(_allDistrictLabel),
-        ),
-        ..._districtOptions.map(
-          (district) =>
-              DropdownMenuItem<String>(value: district, child: Text(district)),
-        ),
-      ],
-      onChanged: (value) {
-        setState(() => _districtFilter = value);
-        controller.setDistrictFilter(value);
-      },
-    );
-  }
-
-  String _districtFilterLabel() {
-    final district = _districtFilter;
-    if (district == null || district.isEmpty) {
-      return _allDistrictLabel;
-    }
-    return district;
-  }
-
-  void _openCupertinoDistrictPicker(CleanerOrdersController controller) {
-    FocusScope.of(context).unfocus();
-    final items = [_allDistrictLabel, ..._districtOptions];
-    final current = _districtFilter;
-    final initialIndex = current != null
-        ? _districtOptions.indexOf(current) + 1
-        : 0;
-    final resolvedIndex = initialIndex >= 0 ? initialIndex : 0;
-    int tempIndex = resolvedIndex;
-
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) {
-        final separatorColor = CupertinoColors.separator.resolveFrom(context);
-        final scrollController = FixedExtentScrollController(
-          initialItem: resolvedIndex,
-        );
-        return Container(
-          height: 280,
-          color: CupertinoColors.systemBackground.resolveFrom(context),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 44,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Отмена'),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          final selected = tempIndex == 0
-                              ? null
-                              : items[tempIndex];
-                          setState(() => _districtFilter = selected);
-                          controller.setDistrictFilter(selected);
-                        },
-                        child: const Text('Готово'),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(height: 1, color: separatorColor),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: scrollController,
-                    itemExtent: 36,
-                    onSelectedItemChanged: (index) {
-                      tempIndex = index;
-                    },
-                    children: items
-                        .map((label) => Center(child: Text(label)))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 }
 
@@ -297,13 +171,13 @@ class _CleanerOrdersFilterBar extends StatelessWidget {
       children: CleanerOrdersFilter.values.map((filter) {
         final bool isSelected = value == filter;
         final Color background = isSelected
-            ? AppColors.textPrimary
-            : Colors.white;
+            ? AppColors.primary
+            : AppColors.surface;
         final Color borderColor = isSelected
-            ? AppColors.textPrimary
+            ? AppColors.primary
             : AppColors.border.withValues(alpha: 0.9);
         final Color textColor = isSelected
-            ? Colors.white
+            ? AppColors.white
             : AppColors.textPrimary;
 
         return Expanded(
@@ -319,17 +193,8 @@ class _CleanerOrdersFilterBar extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: background,
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(AppStyle.cardRadius),
                   border: Border.all(color: borderColor),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ]
-                      : null,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -360,29 +225,6 @@ class _CleanerOrdersFilterBar extends StatelessWidget {
   }
 }
 
-class _CupertinoDistrictField extends StatelessWidget {
-  const _CupertinoDistrictField({required this.value, required this.onTap});
-
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Район',
-          suffixIcon: Icon(Icons.expand_more),
-        ),
-        child: Text(value, style: theme.textTheme.bodyMedium),
-      ),
-    );
-  }
-}
-
 class _CleanerOrderCard extends StatelessWidget {
   const _CleanerOrderCard({required this.order, required this.onTap});
 
@@ -394,28 +236,17 @@ class _CleanerOrderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final bool highlight =
         order.highlightCard && order.canAccept && _isPremium(order.planName);
-    final Color textColor = highlight ? Colors.white : AppColors.textPrimary;
-    final Color secondaryColor = highlight
-        ? Colors.white70
-        : AppColors.textSecondary;
+    final Color textColor = AppColors.textPrimary;
+    final Color secondaryColor = AppColors.textSecondary;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: highlight ? AppColors.textPrimary : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: highlight
-              ? null
-              : Border.all(color: AppColors.border.withValues(alpha: 0.85)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
-            ),
-          ],
+          color: highlight ? AppColors.softBlue : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.85)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,14 +260,15 @@ class _CleanerOrderCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: highlight
-                        ? Colors.white.withValues(alpha: 0.15)
-                        : AppColors.background,
-                    borderRadius: BorderRadius.circular(16),
+                        ? AppColors.surface.withValues(alpha: 0.65)
+                        : AppColors.softBlue,
+                    borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Text(
                     order.status.label,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: highlight ? Colors.white : order.status.color,
+                      color: order.status.color,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -544,7 +376,7 @@ extension CleanerOrderStatusStyle on CleanerOrderStatus {
       case CleanerOrderStatus.available:
         return AppColors.primary;
       case CleanerOrderStatus.assigned:
-        return AppColors.secondary;
+        return AppColors.primary;
       case CleanerOrderStatus.completed:
         return AppColors.success;
     }

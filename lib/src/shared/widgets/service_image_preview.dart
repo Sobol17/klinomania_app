@@ -29,7 +29,7 @@ class ServiceImagePreview extends StatelessWidget {
         imageAsset != null && imageAsset!.trim().isNotEmpty ? imageAsset : null;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppStyle.cardRadius),
       child: SizedBox(
         height: height,
         width: double.infinity,
@@ -82,8 +82,8 @@ class _ImageInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.primary.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppStyle.buttonRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -112,13 +112,11 @@ class _ImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: isDark ? AppColors.darkCard : AppColors.surface,
+      color: isDark ? AppColors.softBlue : AppColors.surface,
       alignment: Alignment.center,
       child: Icon(
         Icons.chair_alt,
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.7)
-            : AppColors.primary.withValues(alpha: 0.6),
+        color: AppColors.primary.withValues(alpha: 0.6),
         size: 48,
       ),
     );

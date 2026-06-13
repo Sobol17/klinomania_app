@@ -11,7 +11,6 @@ class ClientProfile extends Equatable {
     required this.dateOfBirth,
     required this.role,
     required this.address,
-    required this.district,
     required this.description,
     required this.createdAt,
     required this.updatedAt,
@@ -24,7 +23,6 @@ class ClientProfile extends Equatable {
   final DateTime? dateOfBirth;
   final UserRole role;
   final String address;
-  final String district;
   final String description;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -38,7 +36,6 @@ class ClientProfile extends Equatable {
     dateOfBirth,
     role,
     address,
-    district,
     description,
     createdAt,
     updatedAt,

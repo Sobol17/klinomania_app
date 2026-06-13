@@ -6,8 +6,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../controllers/auth_controller.dart';
 import 'cta_button.dart';
 
-class PhoneStep extends StatefulWidget {
-  const PhoneStep({
+class CleanerLoginStep extends StatefulWidget {
+  const CleanerLoginStep({
     super.key,
     required this.controller,
     required this.viewportHeight,
@@ -17,13 +17,14 @@ class PhoneStep extends StatefulWidget {
   final double viewportHeight;
 
   @override
-  State<PhoneStep> createState() => _PhoneStepState();
+  State<CleanerLoginStep> createState() => _CleanerLoginStepState();
 }
 
-class _PhoneStepState extends State<PhoneStep> {
+class _CleanerLoginStepState extends State<CleanerLoginStep> {
   late final MaskTextInputFormatter _mask;
   late final TextEditingController _phoneController;
-  bool _isAgreementChecked = false;
+  late final TextEditingController _passwordController;
+  bool _isPasswordHidden = true;
 
   @override
   void initState() {
@@ -33,11 +34,13 @@ class _PhoneStepState extends State<PhoneStep> {
       type: phoneMask.type,
     );
     _phoneController = TextEditingController();
+    _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -45,12 +48,12 @@ class _PhoneStepState extends State<PhoneStep> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = widget.controller;
-    final String normalizedPhone = _normalizePhone(_phoneController.text);
-    final bool isValid =
-        _isAgreementChecked &&
+    final normalizedPhone = _normalizePhone(_phoneController.text);
+    final isValid =
         _isPhoneValid(normalizedPhone) &&
+        _passwordController.text.trim().isNotEmpty &&
         !controller.isLoading;
-    final bool hasFixedHeight =
+    final hasFixedHeight =
         widget.viewportHeight.isFinite && widget.viewportHeight > 0;
 
     final content = Column(
@@ -58,58 +61,60 @@ class _PhoneStepState extends State<PhoneStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Введите номер телефона',
+          'Вход для клинера',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        Text(
+          'Введите номер телефона и пароль',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 20),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
           inputFormatters: [_mask],
+          textInputAction: TextInputAction.next,
           onChanged: (_) {
-            widget.controller.clearError();
+            controller.clearError();
             setState(() {});
           },
-          decoration: const InputDecoration(hintText: '+7'),
+          decoration: const InputDecoration(
+            labelText: 'Телефон',
+            hintText: '+7',
+          ),
         ),
-        const SizedBox(height: 18),
-        GestureDetector(
-          onTap: () {
-            widget.controller.clearError();
-            setState(() => _isAgreementChecked = !_isAgreementChecked);
+        const SizedBox(height: 12),
+        TextField(
+          controller: _passwordController,
+          obscureText: _isPasswordHidden,
+          textInputAction: TextInputAction.done,
+          onChanged: (_) {
+            controller.clearError();
+            setState(() {});
           },
-          child: Row(
-            children: [
-              Checkbox(
-                value: _isAgreementChecked,
-                onChanged: (value) {
-                  widget.controller.clearError();
-                  setState(() => _isAgreementChecked = value ?? false);
-                },
+          onSubmitted: (_) {
+            if (isValid) {
+              _submit(normalizedPhone);
+            }
+          },
+          decoration: InputDecoration(
+            labelText: 'Пароль',
+            suffixIcon: IconButton(
+              onPressed: () {
+                setState(() => _isPasswordHidden = !_isPasswordHidden);
+              },
+              icon: Icon(
+                _isPasswordHidden
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: AppColors.textSecondary,
               ),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    text: 'Я ознакомлен(а) и согласен(на) с ',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'условиями обработки персональных данных',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         if (controller.errorMessage != null) ...[
@@ -123,11 +128,9 @@ class _PhoneStepState extends State<PhoneStep> {
         ],
         if (hasFixedHeight) const Spacer() else const SizedBox(height: 24),
         CTAButton(
-          label: 'Получить СМС с кодом',
+          label: 'Войти',
           isLoading: controller.isLoading,
-          onPressed: isValid
-              ? () => controller.submitPhone(normalizedPhone)
-              : null,
+          onPressed: isValid ? () => _submit(normalizedPhone) : null,
         ),
         const SizedBox(height: 8),
       ],
@@ -138,6 +141,13 @@ class _PhoneStepState extends State<PhoneStep> {
     }
 
     return content;
+  }
+
+  void _submit(String normalizedPhone) {
+    widget.controller.submitCleanerCredentials(
+      phone: normalizedPhone,
+      password: _passwordController.text,
+    );
   }
 
   String _normalizePhone(String raw) {

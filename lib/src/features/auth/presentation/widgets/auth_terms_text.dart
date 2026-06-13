@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 class AuthTermsText extends StatelessWidget {
   const AuthTermsText({super.key});
 
@@ -7,11 +9,11 @@ class AuthTermsText extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall?.copyWith(
-      color: Colors.black.withAlpha((0.55 * 255).round()),
+      color: AppColors.textSecondary,
       height: 1.35,
     );
     final linkStyle = textStyle?.copyWith(
-      color: theme.colorScheme.primary,
+      color: AppColors.primary,
       decoration: TextDecoration.underline,
     );
 

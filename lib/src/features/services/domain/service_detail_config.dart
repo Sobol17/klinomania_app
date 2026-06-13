@@ -38,7 +38,7 @@ class ServiceDetailConfig {
     required this.description,
     this.darkCard = false,
     this.arrivalMinutes = 60,
-    this.heroGradient = const [Color(0xFFE3EDFF), Color(0xFFFFFFFF)],
+    this.heroGradient = const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
     this.heroIcon = Icons.weekend,
     this.roomOptions,
     this.cleaningOptions,

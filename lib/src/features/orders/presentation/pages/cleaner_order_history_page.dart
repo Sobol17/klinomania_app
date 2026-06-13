@@ -164,15 +164,8 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppStyle.cardRadius),
           border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +234,7 @@ class _CleanerHistoryHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
       ),
       child: Row(
@@ -250,12 +243,13 @@ class _CleanerHistoryHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.12),
+              color: AppColors.softBlue,
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
             ),
             child: const Icon(
               Icons.history_toggle_off,
-              color: AppColors.secondary,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(width: 16),
@@ -309,12 +303,12 @@ class _CleanerHistoryErrorCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
         message,
-        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+        style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger),
       ),
     );
   }
@@ -330,7 +324,7 @@ class _CleanerHistoryEmptyCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
@@ -369,7 +363,7 @@ Color _statusColor(CleanerOrderStatus status) {
     case CleanerOrderStatus.available:
       return AppColors.primary;
     case CleanerOrderStatus.assigned:
-      return AppColors.secondary;
+      return AppColors.primary;
     case CleanerOrderStatus.completed:
       return AppColors.success;
   }

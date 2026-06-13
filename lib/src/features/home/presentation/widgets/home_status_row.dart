@@ -13,18 +13,15 @@ class HomeStatusRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.history, size: 18),
-            label: const Text('История уборки'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          child: Text(
+            'Клиномания',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppColors.textPrimary,
+              fontFamily: 'LovelaceText',
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
             ),
           ),
         ),
@@ -46,14 +43,8 @@ class _PlanCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppStyle.panelRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [

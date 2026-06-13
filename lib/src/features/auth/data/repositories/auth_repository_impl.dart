@@ -33,17 +33,27 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthSession> loginCleaner({
+    required String phoneNumber,
+    required String password,
+  }) async {
+    final session = await remoteDataSource.loginCleaner(
+      phoneNumber: phoneNumber,
+      password: password,
+    );
+    return session.toEntity();
+  }
+
+  @override
   Future<void> completeProfile({
     required String name,
     required String email,
     required String address,
-    required String district,
   }) {
     return remoteDataSource.completeProfile(
       name: name,
       email: email,
       address: address,
-      district: district,
     );
   }
 

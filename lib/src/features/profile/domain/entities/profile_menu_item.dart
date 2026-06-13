@@ -1,4 +1,4 @@
-enum ProfileMenuAction { history, logout, delete }
+enum ProfileMenuAction { personalData, history, logout, delete }
 
 class ProfileMenuItem {
   const ProfileMenuItem({

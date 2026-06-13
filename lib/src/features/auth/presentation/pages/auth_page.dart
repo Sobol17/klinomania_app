@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../domain/entities/auth_session.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_terms_text.dart';
+import '../widgets/cleaner_login_step.dart';
 import '../widgets/info_step.dart';
 import '../widgets/otp_step.dart';
 import '../widgets/phone_step.dart';
@@ -62,7 +64,8 @@ class AuthPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (step != AuthStep.authenticated) ...[
+                      if (step != AuthStep.authenticated &&
+                          step != AuthStep.cleanerLogin) ...[
                         const SizedBox(height: 24),
                         const AuthTermsText(),
                         const SizedBox(height: 16),
@@ -86,8 +89,13 @@ class AuthPage extends StatelessWidget {
     switch (step) {
       case AuthStep.welcome:
         return WelcomeStep(
-          onSelectCleaner: () => controller.start(UserRole.cleaner),
+          onSelectCleaner: controller.startCleanerLogin,
           onSelectClient: () => controller.start(UserRole.client),
+        );
+      case AuthStep.cleanerLogin:
+        return CleanerLoginStep(
+          controller: controller,
+          viewportHeight: viewportHeight,
         );
       case AuthStep.phoneInput:
         return PhoneStep(
@@ -127,6 +135,9 @@ class _BackButton extends StatelessWidget {
       case AuthStep.infoFill:
         action = controller.backToPhone;
         break;
+      case AuthStep.cleanerLogin:
+        action = controller.backToWelcome;
+        break;
       default:
         action = null;
     }
@@ -136,13 +147,13 @@ class _BackButton extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: const [
-          Icon(Icons.arrow_back_ios_new, color: Color(0xFF2C7BFF), size: 18),
+          Icon(Icons.arrow_back_ios_new, color: AppColors.primary, size: 18),
           SizedBox(width: 4),
           Text(
             'Назад',
             style: TextStyle(
               fontSize: 16,
-              color: Color(0xFF2C7BFF),
+              color: AppColors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),

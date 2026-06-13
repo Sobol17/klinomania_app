@@ -52,7 +52,7 @@ class CleanerOrdersRemoteDataSource {
     await _mockDelay();
   }
 
-  Future<List<CleanerOrderItemModel>> fetchOrders({String? district}) async {
+  Future<List<CleanerOrderItemModel>> fetchOrders() async {
     await _mockDelay();
     return List<CleanerOrderItemModel>.unmodifiable(_orders);
   }

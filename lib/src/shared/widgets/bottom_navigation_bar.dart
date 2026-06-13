@@ -19,70 +19,88 @@ class CustomBottomNavigation extends StatelessWidget {
     final labelStyle =
         theme.textTheme.labelMedium?.copyWith(
           fontSize: 12,
-          color: AppColors.secondary,
+          color: AppColors.primary,
           fontWeight: FontWeight.w500,
         ) ??
         const TextStyle(
           fontSize: 12,
-          color: AppColors.secondary,
+          color: AppColors.primary,
           fontWeight: FontWeight.w500,
         );
 
-    final bar = BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: Colors.white,
-      elevation: 0,
-      selectedItemColor: AppColors.secondary,
-      unselectedItemColor: AppColors.secondary,
-      selectedIconTheme: const IconThemeData(color: AppColors.secondary),
-      unselectedIconTheme: IconThemeData(
-        color: AppColors.secondary.withValues(alpha: 0.6),
+    final bar = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, -8),
+          ),
+        ],
       ),
-      selectedLabelStyle: labelStyle,
-      unselectedLabelStyle: labelStyle,
-      showUnselectedLabels: true,
-      selectedFontSize: labelStyle.fontSize ?? 12,
-      unselectedFontSize: labelStyle.fontSize ?? 12,
-      currentIndex: currentIndex,
-      onTap: onDestinationSelected,
-      items: const [
-        BottomNavigationBarItem(
-          icon: _NavIcon(
-            asset: 'assets/icons/navigation/cleaning.svg',
-            activeAsset: 'assets/icons/navigation/cleaning.svg',
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.primary.withValues(alpha: 0.36),
+          selectedIconTheme: const IconThemeData(color: AppColors.primary),
+          unselectedIconTheme: IconThemeData(
+            color: AppColors.primary.withValues(alpha: 0.36),
           ),
-          activeIcon: _NavIcon(
-            asset: 'assets/icons/navigation/cleaning.svg',
-            activeAsset: 'assets/icons/navigation/cleaning.svg',
-            isActive: true,
+          selectedLabelStyle: labelStyle.copyWith(fontWeight: FontWeight.w700),
+          unselectedLabelStyle: labelStyle.copyWith(
+            color: AppColors.primary.withValues(alpha: 0.36),
           ),
-          label: 'Услуги',
+          showUnselectedLabels: true,
+          selectedFontSize: labelStyle.fontSize ?? 12,
+          unselectedFontSize: labelStyle.fontSize ?? 12,
+          currentIndex: currentIndex,
+          onTap: onDestinationSelected,
+          items: const [
+            BottomNavigationBarItem(
+              icon: _NavIcon(
+                asset: 'assets/icons/navigation/cleaning.svg',
+                activeAsset: 'assets/icons/navigation/cleaning.svg',
+              ),
+              activeIcon: _NavIcon(
+                asset: 'assets/icons/navigation/cleaning.svg',
+                activeAsset: 'assets/icons/navigation/cleaning.svg',
+                isActive: true,
+              ),
+              label: 'Уборки',
+            ),
+            BottomNavigationBarItem(
+              icon: _NavIcon(
+                asset: 'assets/icons/navigation/time.svg',
+                activeAsset: 'assets/icons/navigation/time.svg',
+              ),
+              activeIcon: _NavIcon(
+                asset: 'assets/icons/navigation/time.svg',
+                activeAsset: 'assets/icons/navigation/time.svg',
+                isActive: true,
+              ),
+              label: 'История',
+            ),
+            BottomNavigationBarItem(
+              icon: _NavIcon(
+                asset: 'assets/icons/navigation/profile.svg',
+                activeAsset: 'assets/icons/navigation/profile.svg',
+              ),
+              activeIcon: _NavIcon(
+                asset: 'assets/icons/navigation/profile.svg',
+                activeAsset: 'assets/icons/navigation/profile.svg',
+                isActive: true,
+              ),
+              label: 'Профиль',
+            ),
+          ],
         ),
-        BottomNavigationBarItem(
-          icon: _NavIcon(
-            asset: 'assets/icons/navigation/time.svg',
-            activeAsset: 'assets/icons/navigation/time.svg',
-          ),
-          activeIcon: _NavIcon(
-            asset: 'assets/icons/navigation/time.svg',
-            activeAsset: 'assets/icons/navigation/time.svg',
-            isActive: true,
-          ),
-          label: 'История',
-        ),
-        BottomNavigationBarItem(
-          icon: _NavIcon(
-            asset: 'assets/icons/navigation/profile.svg',
-            activeAsset: 'assets/icons/navigation/profile.svg',
-          ),
-          activeIcon: _NavIcon(
-            asset: 'assets/icons/navigation/profile.svg',
-            activeAsset: 'assets/icons/navigation/profile.svg',
-            isActive: true,
-          ),
-          label: 'Профиль',
-        ),
-      ],
+      ),
     );
 
     return Theme(
@@ -93,7 +111,7 @@ class CustomBottomNavigation extends StatelessWidget {
         hoverColor: Colors.transparent,
         focusColor: Colors.transparent,
       ),
-      child: bar,
+      child: SafeArea(top: false, child: bar),
     );
   }
 }
@@ -111,7 +129,7 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = IconTheme.of(context).color ?? AppColors.secondary;
+    final iconColor = IconTheme.of(context).color ?? AppColors.primary;
     final icon = SvgPicture.asset(
       isActive ? activeAsset : asset,
       height: 24,
@@ -120,12 +138,12 @@ class _NavIcon extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      height: 34,
+      width: 64,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: !isActive
-            ? AppColors.surface
-            : AppColors.secondary.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(28),
+        color: !isActive ? Colors.transparent : AppColors.softBlue,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: icon,
     );

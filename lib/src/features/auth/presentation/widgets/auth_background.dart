@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 class AuthBackground extends StatelessWidget {
   const AuthBackground({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: RadialGradient(
-          center: const Alignment(0, -0.6),
+          center: Alignment(0, -0.65),
           radius: 1.2,
-          colors: [
-            Colors.white,
-            theme.colorScheme.surface,
-            const Color(0xFFE9F1FF),
-          ],
-          stops: const [0.2, 0.7, 1],
+          colors: [AppColors.surface, AppColors.surface, AppColors.lightBlue],
+          stops: [0.2, 0.72, 1],
         ),
       ),
       child: Stack(
@@ -31,12 +28,12 @@ class AuthBackground extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withAlpha((opacity * 255).round()),
+                color: AppColors.white.withAlpha((opacity * 255).round()),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(
-                      0xFF4D7BFE,
-                    ).withAlpha((shadowOpacity * 255).round()),
+                    color: AppColors.lightBlue.withAlpha(
+                      (shadowOpacity * 255).round(),
+                    ),
                     blurRadius: 60,
                     spreadRadius: -20,
                   ),

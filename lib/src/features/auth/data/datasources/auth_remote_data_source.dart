@@ -26,11 +26,29 @@ class AuthRemoteDataSource {
     );
   }
 
+  Future<AuthSessionModel> loginCleaner({
+    required String phoneNumber,
+    required String password,
+  }) async {
+    await _mockDelay();
+    if (password.isEmpty) {
+      throw StateError('Введите пароль');
+    }
+
+    return AuthSessionModel(
+      accessToken:
+          'mock-cleaner-token-${DateTime.now().millisecondsSinceEpoch}',
+      tokenType: 'Bearer',
+      phoneNumber: phoneNumber,
+      isNewUser: false,
+      role: UserRole.cleaner,
+    );
+  }
+
   Future<void> completeProfile({
     required String name,
     required String email,
     required String address,
-    required String district,
   }) async {
     await _mockDelay();
   }

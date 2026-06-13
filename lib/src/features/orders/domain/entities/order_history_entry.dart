@@ -25,7 +25,6 @@ class OrderHistoryEntry {
     required this.cleaner,
     this.area,
     this.roomsDescription,
-    this.district,
     this.startTime,
     this.endTime,
     this.startStatusLabel,
@@ -44,7 +43,6 @@ class OrderHistoryEntry {
   final DateTime scheduledAt;
   final double? area;
   final String? roomsDescription;
-  final String? district;
   final DateTime? startTime;
   final DateTime? endTime;
   final String? startStatusLabel;
@@ -79,7 +77,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'Поддерживающая',
       roomsDescription: '1-комнатная',
       address: 'Кутузовский проспект, 23к2, подъезд 1, кв. 44',
-      district: 'Центральный',
       price: 4500,
       paymentMethod: 'ПОДЕЛИ',
       scheduledAt: today.add(const Duration(hours: 11)),
@@ -95,7 +92,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'Поддерживающая',
       area: 65,
       address: 'Кутузовский проспект, 23к2, подъезд 1, кв. 44',
-      district: 'Центральный',
       price: 3500,
       paymentMethod: 'СБП',
       scheduledAt: today.add(const Duration(hours: 9, minutes: 30)),
@@ -111,7 +107,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'Генеральная',
       area: 120,
       address: 'Профсоюзная улица, 16, подъезд 3, кв. 88',
-      district: 'Южный',
       price: 7500,
       paymentMethod: 'СБП',
       scheduledAt: yesterday.add(const Duration(hours: 11, minutes: 30)),
@@ -128,7 +123,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'Поддерживающая',
       area: 180,
       address: 'Пресненская наб., 10, офис 1201',
-      district: 'Западный',
       price: 2500,
       paymentMethod: 'СБП',
       scheduledAt: earlierTwo.add(const Duration(hours: 9, minutes: 30)),
@@ -144,7 +138,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'Поддерживающая',
       area: 70,
       address: 'Большая Никитская, 18, подъезд 2, кв. 12',
-      district: 'Северный',
       price: 4500,
       paymentMethod: 'СБП',
       scheduledAt: earlierThree.add(const Duration(hours: 8)),
@@ -160,7 +153,6 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
       cleaningType: 'После ремонта',
       area: 55,
       address: 'Садовая-Триумфальная, 4, подъезд 1, кв. 21',
-      district: 'Восточный',
       price: 4000,
       paymentMethod: 'Наличные',
       scheduledAt: earlierFour.add(const Duration(hours: 8)),

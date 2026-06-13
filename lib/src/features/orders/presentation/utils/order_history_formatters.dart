@@ -103,7 +103,7 @@ extension OrderHistoryStatusStyle on OrderHistoryStatus {
       case OrderHistoryStatus.awaitingCleaner:
         return AppColors.primary;
       case OrderHistoryStatus.inProgress:
-        return AppColors.secondary;
+        return AppColors.primary;
       case OrderHistoryStatus.completed:
         return AppColors.success;
       case OrderHistoryStatus.cancelled:
