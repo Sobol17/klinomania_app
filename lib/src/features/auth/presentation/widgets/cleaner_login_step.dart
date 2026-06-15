@@ -63,13 +63,14 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
         Text(
           'Вход для клинера',
           style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 12),
         Text(
           'Введите номер телефона и пароль',
           style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),

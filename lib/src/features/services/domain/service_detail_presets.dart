@@ -7,10 +7,196 @@ class ServiceDetailPresets {
   const ServiceDetailPresets._();
 
   static final List<ServiceRoomOption> _defaultRooms = const [
-    ServiceRoomOption(id: 'room-1', label: '1-комнатная', area: '30-50 м²'),
-    ServiceRoomOption(id: 'room-2', label: '2-комнатная', area: '50-70 м²'),
-    ServiceRoomOption(id: 'room-3', label: '3-комнатная', area: '70-100 м²'),
-    ServiceRoomOption(id: 'room-4', label: '4-комнатная', area: 'от 100 м²'),
+    ServiceRoomOption(
+      id: 'room-1',
+      label: '1-комнатная',
+      area: '30-50 м²',
+      priceModifier: 0,
+    ),
+    ServiceRoomOption(
+      id: 'room-2',
+      label: '2-комнатная',
+      area: '50-70 м²',
+      priceModifier: 600,
+    ),
+    ServiceRoomOption(
+      id: 'room-3',
+      label: '3-комнатная',
+      area: '70-100 м²',
+      priceModifier: 1200,
+    ),
+    ServiceRoomOption(
+      id: 'room-4',
+      label: '4-комнатная',
+      area: 'от 100 м²',
+      priceModifier: 1800,
+    ),
+  ];
+
+  static final List<ServiceCleaningOption> _basicMinimumAddOns = const [
+    ServiceCleaningOption(
+      id: 'fridge-inside',
+      label: 'Холодильник внутри (освобожденный и размороженный)',
+      isAddon: true,
+      priceModifier: 800,
+    ),
+    ServiceCleaningOption(
+      id: 'microwave-inside',
+      label: 'Микроволновка внутри',
+      isAddon: true,
+      priceModifier: 700,
+    ),
+    ServiceCleaningOption(
+      id: 'hood-grates',
+      label: 'Кухонная вытяжка с решетками',
+      isAddon: true,
+      priceModifier: 800,
+    ),
+    ServiceCleaningOption(
+      id: 'oven-inside',
+      label: 'Духовка внутри',
+      isAddon: true,
+      priceModifier: 800,
+    ),
+    ServiceCleaningOption(
+      id: 'pet-tray-bowls',
+      label: 'Моем лоток и миски питомца',
+      isAddon: true,
+      priceModifier: 700,
+    ),
+    ServiceCleaningOption(
+      id: 'kitchen-cabinets-inside',
+      label:
+          'Шкафы и ящики кухонного гарнитура внутри при условии, что они пустые',
+      isAddon: true,
+      priceModifier: 1500,
+    ),
+    ServiceCleaningOption(
+      id: 'washer-dryer-inside',
+      label: 'Стиральную/сушильную машину внутри',
+      isAddon: true,
+      priceModifier: 300,
+    ),
+    ServiceCleaningOption(
+      id: 'bathroom-tile-deep',
+      label:
+          'Очистить кафельную плитку, межплиточные швы и вытяжку от сильных загрязнений по всей высоте (в санузле)',
+      isAddon: true,
+      priceModifier: 1500,
+    ),
+    ServiceCleaningOption(
+      id: 'sanitary-deep',
+      label:
+          'Очистить сантехнику, смесители от сильных загрязнений: ржавчина, водный камень, известковый налет (1 час)',
+      isAddon: true,
+      priceModifier: 1200,
+    ),
+    ServiceCleaningOption(
+      id: 'ironing-hour',
+      label: 'Глажка (1 час)',
+      isAddon: true,
+      priceModifier: 1200,
+    ),
+    ServiceCleaningOption(
+      id: 'steam-generator',
+      label: 'Уборка парогенератором',
+      isAddon: true,
+      priceModifier: 1500,
+    ),
+    ServiceCleaningOption(
+      id: 'ladder',
+      label: 'Стремянка',
+      isAddon: true,
+      priceModifier: 1500,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-1',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 3500,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-2',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 5250,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-3',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 7700,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-4',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 8750,
+    ),
+  ];
+
+  static final List<ServiceCleaningOption> _generalAddOns = const [
+    ServiceCleaningOption(
+      id: 'chandelier-cleaning',
+      label: 'Моем сложные и хрустальные люстры и светильники',
+      isAddon: true,
+      priceModifier: 1000,
+    ),
+    ServiceCleaningOption(
+      id: 'balcony-loggia',
+      label: 'Убираем на балконе/лоджии (включая окна)',
+      isAddon: true,
+      priceModifier: 4000,
+    ),
+    ServiceCleaningOption(
+      id: 'pet-tray-bowls',
+      label: 'Моем лоток и миски питомца',
+      isAddon: true,
+      priceModifier: 700,
+    ),
+    ServiceCleaningOption(
+      id: 'bedding-wash-hang',
+      label: 'Стираем и развешиваем постельное белье (до 2 загрузок)',
+      isAddon: true,
+      priceModifier: 700,
+    ),
+    ServiceCleaningOption(
+      id: 'ironing-hour',
+      label: 'Гладим вещи (до 60 минут)',
+      isAddon: true,
+      priceModifier: 1200,
+    ),
+    ServiceCleaningOption(
+      id: 'special-errands',
+      label:
+          'Выполним особые поручения (до 30 минут): отнести вещи в химчистку, покормить питомца и т.д.',
+      isAddon: true,
+      priceModifier: 1200,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-1',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 3500,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-2',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 5250,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-3',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 7700,
+    ),
+    ServiceCleaningOption(
+      id: 'windows-room-4',
+      label: 'Помыть окна',
+      isAddon: true,
+      priceModifier: 8750,
+    ),
   ];
 
   static ServiceDetailConfig resolve(CleaningService service) {
@@ -24,6 +210,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.king_bed_outlined,
           roomOptions: _defaultRooms,
+          cleaningOptions: _generalAddOns,
         );
       case 'standard':
         return ServiceDetailConfig(
@@ -34,6 +221,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Colors.white],
           heroIcon: Icons.weekend_outlined,
           roomOptions: _defaultRooms,
+          cleaningOptions: _basicMinimumAddOns,
         );
       case 'express':
         return ServiceDetailConfig(
@@ -44,6 +232,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.flash_on_outlined,
           roomOptions: _defaultRooms,
+          cleaningOptions: _basicMinimumAddOns,
         );
       case 'office':
         return ServiceDetailConfig(
@@ -54,6 +243,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.apartment,
           roomOptions: _defaultRooms,
+          cleaningOptions: _basicMinimumAddOns,
         );
       case 'kids':
         return ServiceDetailConfig(
@@ -64,6 +254,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
           heroIcon: Icons.toys_outlined,
           roomOptions: _defaultRooms,
+          cleaningOptions: _basicMinimumAddOns,
         );
       case 'cottage':
         return ServiceDetailConfig(
@@ -77,12 +268,6 @@ class ServiceDetailPresets {
             ServiceCleaningOption(id: 'support', label: 'Поддерживающая'),
             ServiceCleaningOption(id: 'general', label: 'Генеральная'),
             ServiceCleaningOption(id: 'repair', label: 'После ремонта'),
-            ServiceCleaningOption(
-              id: 'windows',
-              label: '+ Мойка окон',
-              subtitle: 'Дополнительная опция',
-              isAddon: true,
-            ),
           ],
           initialArea: 120,
           minArea: 60,
@@ -98,6 +283,7 @@ class ServiceDetailPresets {
           heroGradient: const [Color(0xFFB8DDFF), Colors.white],
           heroIcon: Icons.cleaning_services,
           roomOptions: _defaultRooms,
+          cleaningOptions: _basicMinimumAddOns,
         );
     }
   }

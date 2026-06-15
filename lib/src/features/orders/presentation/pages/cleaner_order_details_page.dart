@@ -119,37 +119,7 @@ class CleanerOrderDetailsPage extends StatelessWidget {
                       children: [
                         _OrderHeaderCard(order: activeOrder),
                         const SizedBox(height: 16),
-                        _SectionTitle('Адрес:'),
-                        _InfoField(value: activeOrder.address),
-                        const SizedBox(height: 12),
-                        _SectionTitle('Комментарий:'),
-                        _InfoField(value: activeOrder.comment),
-                        const SizedBox(height: 12),
-                        _SectionTitle('Дата и начало уборки:'),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _InfoField(
-                                value: OrderHistoryFormatters.formatNumericDate(
-                                  activeOrder.startAt,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _InfoField(
-                                value: OrderHistoryFormatters.formatTime(
-                                  activeOrder.startAt,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _SectionTitle('Детали заказа:'),
-                        _AreaRow(area: activeOrder.area),
-                        const SizedBox(height: 12),
-                        _ServicesGrid(services: activeOrder.services),
+                        _CleanerOrderDetailsCard(order: activeOrder),
                         const SizedBox(height: 18),
                         Theme(
                           data: theme.copyWith(
@@ -163,10 +133,6 @@ class CleanerOrderDetailsPage extends StatelessWidget {
                                 _showSnack(context, 'Скоро построим маршрут'),
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        Divider(color: AppColors.border.withValues(alpha: 0.8)),
-                        const SizedBox(height: 12),
-                        _TotalRow(totalPrice: activeOrder.price),
                       ],
                     ),
                   ),
@@ -227,7 +193,7 @@ class _OrderHeaderCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            order.objectType,
+            order.planName,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -237,8 +203,84 @@ class _OrderHeaderCard extends StatelessWidget {
             children: [
               _InfoChip(icon: Icons.people_outline, label: order.cleanersLabel),
               const SizedBox(width: 8),
-              _InfoChip(icon: Icons.schedule, label: order.durationLabel),
+              _InfoChip(icon: Icons.home_outlined, label: order.objectType),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CleanerOrderDetailsCard extends StatelessWidget {
+  const _CleanerOrderDetailsCard({required this.order});
+
+  final CleanerOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DetailItem(label: 'Количество комнат', value: order.objectType),
+          _DetailItem(
+            label: 'Дата и время',
+            value: OrderHistoryFormatters.formatFullDateTime(order.startAt),
+          ),
+          _DetailItem(label: 'Адрес', value: order.address),
+          _DetailItem(label: 'Комментарий', value: order.comment),
+          if (order.services.isNotEmpty)
+            _DetailItem(
+              label: 'Дополнительные опции',
+              value: order.services
+                  .where((service) => service.enabled)
+                  .map((service) => service.label)
+                  .join('\n'),
+            ),
+          const SizedBox(height: 12),
+          Divider(color: AppColors.border.withValues(alpha: 0.8)),
+          const SizedBox(height: 12),
+          _TotalRow(totalPrice: order.price),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailItem extends StatelessWidget {
+  const _DetailItem({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -271,167 +313,6 @@ class _InfoChip extends StatelessWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-    );
-  }
-}
-
-class _InfoField extends StatelessWidget {
-  const _InfoField({required this.value});
-
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(
-        value,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _AreaRow extends StatelessWidget {
-  const _AreaRow({required this.area});
-
-  final double area;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.square_foot, color: AppColors.textSecondary),
-              const SizedBox(width: 8),
-              Text(
-                'Площадь',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            '${area.toStringAsFixed(0)} м²',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServicesGrid extends StatelessWidget {
-  const _ServicesGrid({required this.services});
-
-  final List<CleanerOrderServiceOption> services;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool multiColumn = services.length > 1;
-        final double spacing = multiColumn ? 12 : 0;
-        final double itemWidth = multiColumn
-            ? (constraints.maxWidth - spacing) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: 12,
-          children: services
-              .map(
-                (service) => SizedBox(
-                  width: itemWidth,
-                  child: _ServiceCard(service: service),
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  const _ServiceCard({required this.service});
-
-  final CleanerOrderServiceOption service;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bool enabled = service.enabled;
-    final Color textColor = enabled
-        ? AppColors.textPrimary
-        : AppColors.textSecondary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            service.label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (!enabled) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Отключено',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
         ],
       ),
     );

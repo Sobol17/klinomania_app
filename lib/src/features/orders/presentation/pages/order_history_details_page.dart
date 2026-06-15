@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/widgets/cta_button.dart';
-import '../../../home/presentation/widgets/home_background.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../domain/entities/order_history_entry.dart';
 import '../utils/order_history_formatters.dart';
 
@@ -50,7 +49,6 @@ class OrderHistoryDetailsPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          const Positioned.fill(child: HomeBackground()),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +57,7 @@ class OrderHistoryDetailsPage extends StatelessWidget {
                 const AppBackButton(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
                     child: Column(
                       children: [
                         _OrderHistoryDetailCard(order: order),
@@ -117,7 +115,12 @@ class _OrderHistoryDetailCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 24, left: 6, right: 6),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,6 +150,11 @@ class _OrderHistoryDetailCard extends StatelessWidget {
               label: 'Количество комнат в квартире',
               value: order.roomsDescription!,
             ),
+          if (order.additionalOptions.isNotEmpty)
+            _DetailItem(
+              label: 'Дополнительные опции',
+              value: order.additionalOptions.join('\n'),
+            ),
           _DetailItem(label: 'Адрес', value: order.address),
           _DetailItem(
             label: 'Дата и время',
@@ -154,7 +162,6 @@ class _OrderHistoryDetailCard extends StatelessWidget {
           ),
           _DetailItem(label: 'Начало и конец уборки', value: _formatStartEnd()),
           _DetailItem(label: 'Уборка заняла', value: _formatDuration()),
-          _DetailItem(label: 'Способ оплаты', value: order.paymentMethod),
           const SizedBox(height: 12),
           Divider(color: AppColors.border.withValues(alpha: 0.8)),
           const SizedBox(height: 12),

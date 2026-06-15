@@ -122,6 +122,7 @@ class _OrderHistoryCard extends StatelessWidget {
     final Color background = highlighted
         ? AppColors.softBlue
         : AppColors.surface;
+    final metaLabel = _orderMetaLabel(order);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -135,7 +136,7 @@ class _OrderHistoryCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,6 +185,18 @@ class _OrderHistoryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
+            if (metaLabel != null) ...[
+              Text(
+                metaLabel,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             Text(
               order.address,
               maxLines: 2,
@@ -197,6 +210,24 @@ class _OrderHistoryCard extends StatelessWidget {
       ),
     );
   }
+
+  String? _orderMetaLabel(OrderHistoryEntry order) {
+    final parts = <String>[];
+    final rooms = order.roomsDescription?.trim();
+    if (rooms != null && rooms.isNotEmpty) {
+      parts.add(rooms);
+    }
+    final cleaningType = order.cleaningType.trim();
+    if (cleaningType.isNotEmpty && cleaningType != order.serviceName) {
+      parts.add(cleaningType);
+    }
+    if (order.additionalOptions.isNotEmpty) {
+      final options = order.additionalOptions.take(2).join(', ');
+      final restCount = order.additionalOptions.length - 2;
+      parts.add(restCount > 0 ? '$options + еще $restCount' : options);
+    }
+    return parts.isEmpty ? null : parts.join(' / ');
+  }
 }
 
 class _HistoryHeaderCard extends StatelessWidget {
@@ -205,50 +236,25 @@ class _HistoryHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.softBlue,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.history, color: AppColors.primary),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'История уборок',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontFamily: 'LovelaceText',
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'История уборок',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontFamily: 'LovelaceText',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Следите за статусами заказов и повторяйте понравившиеся услуги',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Следите за статусами заказов и повторяйте понравившиеся услуги',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 14,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

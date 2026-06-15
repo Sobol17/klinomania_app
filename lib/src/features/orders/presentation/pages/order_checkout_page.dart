@@ -44,27 +44,22 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   late final TextEditingController _commentController;
   late DateTime _date;
   late TimeOfDay _time;
-  late String _paymentMethod;
   bool _isSubmitting = false;
   String? _errorMessage;
 
-  final List<String> _paymentMethods = const ['СБП', 'ПОДЕЛИ', 'плати', 'Нал'];
   static const double _fallbackTotalPrice = 7500;
   @override
   void initState() {
     super.initState();
     _area = widget.area;
-    _addressController = TextEditingController(
-      text: 'Кутузовский проспект, 23к2',
-    );
-    _entranceController = TextEditingController(text: '1');
-    _floorController = TextEditingController(text: '14');
-    _apartmentController = TextEditingController(text: '44');
-    _intercomController = TextEditingController(text: '44');
+    _addressController = TextEditingController();
+    _entranceController = TextEditingController();
+    _floorController = TextEditingController();
+    _apartmentController = TextEditingController();
+    _intercomController = TextEditingController();
     _commentController = TextEditingController();
     _date = DateTime.now().add(const Duration(days: 1));
     _time = const TimeOfDay(hour: 11, minute: 0);
-    _paymentMethod = _paymentMethods.first;
   }
 
   @override
@@ -101,15 +96,14 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
           SafeArea(
             child: Column(
               children: [
-                const _BackNav(),
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
+                    padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _ServiceSummary(service: widget.service),
+                        _CheckoutHeader(service: widget.service),
                         const SizedBox(height: 16),
                         _AddressSection(
                           addressController: _addressController,
@@ -128,17 +122,8 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                         ),
                         const SizedBox(height: 16),
                         _OrderDetailsSection(
-                          area: _area,
-                          onEditArea: _openAreaEdit,
-                          cleaningLabel: _cleaningLabel,
+                          roomLabel: _roomLabel,
                           addOns: _selectedAddOnLabels,
-                        ),
-                        const SizedBox(height: 16),
-                        _PaymentSection(
-                          paymentMethods: _paymentMethods,
-                          selected: _paymentMethod,
-                          onSelect: (value) =>
-                              setState(() => _paymentMethod = value),
                         ),
                       ],
                     ),
@@ -166,14 +151,15 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     fallbackPrice: widget.service.priceFrom ?? _fallbackTotalPrice,
   );
 
-  String get _cleaningLabel {
-    if (widget.config.cleaningOptions == null) {
-      return 'Поддерживающая';
+  String? get _roomLabel {
+    final roomOptions = widget.config.roomOptions;
+    if (roomOptions == null || roomOptions.isEmpty) {
+      return null;
     }
-    return widget.config.cleaningOptions!
+    return roomOptions
         .firstWhere(
-          (option) => option.id == widget.selectedCleaningId,
-          orElse: () => widget.config.cleaningOptions!.first,
+          (option) => option.id == widget.selectedRoomId,
+          orElse: () => roomOptions.first,
         )
         .label;
   }
@@ -308,88 +294,71 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
       setState(() => _time = result);
     }
   }
-
-  Future<void> _openAreaEdit() async {
-    final newArea = await showModalBottomSheet<double>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppStyle.cardRadius),
-        ),
-      ),
-      builder: (context) => _AreaEditSheet(initialArea: _area),
-    );
-    if (!mounted || newArea == null) {
-      return;
-    }
-    setState(() => _area = newArea);
-  }
 }
 
-class _BackNav extends StatelessWidget {
-  const _BackNav();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).maybePop(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.arrow_back_ios_new,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Назад',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceSummary extends StatelessWidget {
-  const _ServiceSummary({required this.service});
+class _CheckoutHeader extends StatelessWidget {
+  const _CheckoutHeader({required this.service});
 
   final CleaningService service;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border),
-      ),
+    return _CheckoutCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            service.title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(context).maybePop(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Назад',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Оформление заказа',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Услуга: ${service.title}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Проверьте детали, укажите адрес и удобное время уборки.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -400,6 +369,25 @@ class _ServiceSummary extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CheckoutCard extends StatelessWidget {
+  const _CheckoutCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+      ),
+      child: child,
     );
   }
 }
@@ -423,75 +411,114 @@ class _AddressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _CheckoutCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.location_on_outlined,
+            title: 'Адрес',
+            subtitle: 'Укажите место, куда должен приехать клинер.',
+          ),
+          const SizedBox(height: 16),
+          _OrderTextField(
+            controller: addressController,
+            label: 'Улица, дом, корпус',
+            keyboardType: TextInputType.streetAddress,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _OrderTextField(
+                  controller: entranceController,
+                  label: 'Подъезд',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _OrderTextField(
+                  controller: floorController,
+                  label: 'Этаж',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _OrderTextField(
+                  controller: apartmentController,
+                  label: 'Кв./офис',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _OrderTextField(
+                  controller: intercomController,
+                  label: 'Домофон',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _OrderTextField(
+            controller: commentController,
+            label: 'Комментарий для клинера',
+            keyboardType: TextInputType.multiline,
+            maxLines: 3,
+            minLines: 3,
+            textInputAction: TextInputAction.newline,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.icon, required this.title, this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Адрес:',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _OrderTextField(
-          controller: addressController,
-          label: 'Улица',
-          keyboardType: TextInputType.streetAddress,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 12),
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _OrderTextField(
-                controller: entranceController,
-                label: 'Подъезд',
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _OrderTextField(
-                controller: floorController,
-                label: 'Этаж',
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
               ),
-            ),
+            ],
           ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _OrderTextField(
-                controller: apartmentController,
-                label: 'Кв./офис',
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _OrderTextField(
-                controller: intercomController,
-                label: 'Домофон',
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _OrderTextField(
-          controller: commentController,
-          label: 'Комментарий для клинера',
-          keyboardType: TextInputType.multiline,
-          maxLines: 3,
-          minLines: 3,
-          textInputAction: TextInputAction.newline,
         ),
       ],
     );
@@ -513,248 +540,211 @@ class _DateTimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Выберите дату и время:',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _DropdownField(
-                label:
-                    '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}',
-                onTap: onSelectDate,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _DropdownField(
-                label:
-                    '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                onTap: onSelectTime,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _OrderDetailsSection extends StatelessWidget {
-  const _OrderDetailsSection({
-    required this.area,
-    required this.onEditArea,
-    required this.cleaningLabel,
-    required this.addOns,
-  });
-
-  final double area;
-  final VoidCallback onEditArea;
-  final String cleaningLabel;
-  final List<String> addOns;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final areaLabel = area.truncateToDouble() == area
-        ? area.toStringAsFixed(0)
-        : area.toStringAsFixed(1);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Детали заказа:',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _EditableTile(
-          label: 'Площадь',
-          value: '$areaLabel м²',
-          onTap: onEditArea,
-        ),
-        const SizedBox(height: 12),
-        _SelectionChip(label: cleaningLabel, selected: true),
-        const SizedBox(height: 12),
-        if (addOns.isNotEmpty)
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: addOns
-                .map((label) => _SelectionChip(label: label, selected: true))
-                .toList(),
-          )
-        else
-          _SelectionChip(label: '+ Мойка окон', selected: false),
-      ],
-    );
-  }
-}
-
-class _AreaEditSheet extends StatefulWidget {
-  const _AreaEditSheet({required this.initialArea});
-
-  final double initialArea;
-
-  @override
-  State<_AreaEditSheet> createState() => _AreaEditSheetState();
-}
-
-class _AreaEditSheetState extends State<_AreaEditSheet> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.initialArea;
-    final formatted = initial.truncateToDouble() == initial
-        ? initial.toStringAsFixed(0)
-        : initial.toStringAsFixed(1);
-    _controller = TextEditingController(text: formatted);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final sanitized = _controller.text.replaceAll(',', '.');
-    final value = double.tryParse(sanitized);
-    if (value != null && value > 0) {
-      Navigator.of(context).pop(value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final padding = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 24,
-        bottom: padding + 24,
-      ),
+    return _CheckoutCard(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 50,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-          Text(
-            'Изменить площадь',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          const _SectionTitle(
+            icon: Icons.event_available_outlined,
+            title: 'Дата и время',
+            subtitle: 'Выберите удобное окно для уборки.',
           ),
           const SizedBox(height: 16),
-          _OrderTextField(
-            controller: _controller,
-            label: 'Площадь (м²)',
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textInputAction: TextInputAction.done,
+          Row(
+            children: [
+              Expanded(
+                child: _DropdownField(
+                  label:
+                      '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}',
+                  onTap: onSelectDate,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _DropdownField(
+                  label:
+                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                  onTap: onSelectTime,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          CTAButton(label: 'Сохранить', onPressed: _submit),
         ],
       ),
     );
   }
 }
 
-class _PaymentSection extends StatelessWidget {
-  const _PaymentSection({
-    required this.paymentMethods,
-    required this.selected,
-    required this.onSelect,
-  });
+class _OrderDetailsSection extends StatelessWidget {
+  const _OrderDetailsSection({required this.roomLabel, required this.addOns});
 
-  final List<String> paymentMethods;
-  final String selected;
-  final ValueChanged<String> onSelect;
+  final String? roomLabel;
+  final List<String> addOns;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Способ оплаты:',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+    return _CheckoutCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(
+            icon: Icons.receipt_long_outlined,
+            title: 'Детали заказа',
+            subtitle: 'Параметры, которые вы выбрали в калькуляторе.',
           ),
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: paymentMethods.map((method) {
-              final active = method == selected;
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () => onSelect(method),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: active ? AppColors.softBlue : AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppStyle.inputRadius),
-                      border: Border.all(
-                        color: active ? AppColors.primary : AppColors.border,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (active)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        Text(
-                          method,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+          const SizedBox(height: 16),
+          if (roomLabel != null)
+            _OrderInfoRow(label: 'Количество комнат', value: roomLabel!),
+          if (addOns.isNotEmpty) ...[
+            if (roomLabel != null) const SizedBox(height: 12),
+            Text(
+              'Дополнительные опции',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Column(
+              children: [
+                for (int i = 0; i < addOns.length; i++) ...[
+                  _SelectedAddOnRow(label: addOns[i]),
+                  if (i != addOns.length - 1) const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          ] else ...[
+            if (roomLabel != null) const SizedBox(height: 12),
+            Text(
+              'Дополнительные опции',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const _EmptyAddOnsRow(),
+          ],
+          if (roomLabel == null && addOns.isEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Параметры заказа будут переданы клинеру.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderInfoRow extends StatelessWidget {
+  const _OrderInfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.softBlue),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedAddOnRow extends StatelessWidget {
+  const _SelectedAddOnRow({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.softBlue),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            color: AppColors.primary,
+            size: 18,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyAddOnsRow extends StatelessWidget {
+  const _EmptyAddOnsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        'Не выбраны',
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textSecondary,
         ),
-      ],
+      ),
     );
   }
 }
@@ -775,6 +765,7 @@ class _CheckoutBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.of(context).padding.bottom;
+    final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + padding),
       decoration: const BoxDecoration(
@@ -787,32 +778,49 @@ class _CheckoutBar extends StatelessWidget {
           if (errorMessage != null) ...[
             Text(
               errorMessage!,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.danger),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.danger,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
           ],
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Итоговая стоимость:',
-                style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Итого',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      total,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                total,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 168,
+                height: 48,
+                child: CTAButton(
+                  label: 'Заказать',
+                  isLoading: isLoading,
+                  onPressed: onSubmit,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          CTAButton(
-            label: 'Заказать уборку',
-            isLoading: isLoading,
-            onPressed: onSubmit,
           ),
         ],
       ),
@@ -966,104 +974,6 @@ class _DropdownField extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _EditableTile extends StatelessWidget {
-  const _EditableTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
-          border: Border.all(color: AppColors.fieldBorder),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectionChip extends StatelessWidget {
-  const _SelectionChip({required this.label, required this.selected});
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.textSecondary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      decoration: BoxDecoration(
-        color: selected ? AppColors.softBlue : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
-        border: Border.all(
-          color: selected ? AppColors.primary : AppColors.border,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (selected)
-            Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary,
-              ),
-            ),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

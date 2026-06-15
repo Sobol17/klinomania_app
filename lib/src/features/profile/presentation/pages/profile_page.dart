@@ -23,12 +23,12 @@ BoxDecoration _profileBlockDecoration() {
 BoxDecoration _profileSectionDecoration() {
   return BoxDecoration(
     color: AppColors.surface,
-    borderRadius: BorderRadius.circular(18),
+    borderRadius: BorderRadius.circular(AppStyle.cardRadius),
   );
 }
 
 Color _profileTileColor() {
-  return AppColors.bgBlue;
+  return AppColors.softBlue;
 }
 
 class ProfilePage extends StatelessWidget {
@@ -271,50 +271,52 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
     final phone = _valueOrDefault(profile?.phone, '');
     final email = _valueOrDefault(profile?.email, '');
 
-    return ColoredBox(
-      color: AppColors.disabled,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ProfileSummaryCard(name: name, phone: phone, email: email),
-              const SizedBox(height: 18),
-              if (controller.isLoading && controller.profile == null)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              if (controller.loadError != null) ...[
-                Text(
-                  controller.loadError!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.danger,
+    return Stack(
+      children: [
+        const Positioned.fill(child: HomeBackground()),
+        SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ProfileSummaryCard(name: name, phone: phone, email: email),
+                const SizedBox(height: 18),
+                if (controller.isLoading && controller.profile == null)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
+                if (controller.loadError != null) ...[
+                  Text(
+                    controller.loadError!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.danger,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                _ProfileMenuGroup(
+                  items: controller.primaryMenuItems,
+                  onItemTap: (item) => _handleMenuItem(context, item),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                _ProfileMenuGroup(
+                  items: controller.supportMenuItems,
+                  onItemTap: (item) => _handleMenuItem(context, item),
+                ),
+                const SizedBox(height: 16),
+                _ProfileDangerSection(
+                  item: controller.deleteMenuItem,
+                  onTap: () =>
+                      _handleMenuItem(context, controller.deleteMenuItem),
+                ),
               ],
-              _ProfileMenuGroup(
-                items: controller.primaryMenuItems,
-                onItemTap: (item) => _handleMenuItem(context, item),
-              ),
-              const SizedBox(height: 16),
-              _ProfileMenuGroup(
-                items: controller.supportMenuItems,
-                onItemTap: (item) => _handleMenuItem(context, item),
-              ),
-              const SizedBox(height: 16),
-              _ProfileDangerSection(
-                item: controller.deleteMenuItem,
-                onTap: () =>
-                    _handleMenuItem(context, controller.deleteMenuItem),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -473,7 +475,7 @@ class _ProfileMenuRow extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 68),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: item.isDestructive ? AppColors.surface : _profileTileColor(),
+          color: item.isDestructive ? AppColors.surface : AppColors.bgBlue,
           borderRadius: BorderRadius.circular(AppStyle.inputRadius),
         ),
         child: Row(
@@ -569,9 +571,8 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _CleanerProfileHeader(),
-                const SizedBox(height: 20),
-                const SizedBox(height: 16),
+                _ProfileSummaryCard(name: name, phone: phone, email: email),
+                const SizedBox(height: 18),
                 if (widget.controller.isLoading && profile == null)
                   const Padding(
                     padding: EdgeInsets.only(bottom: 16),
@@ -586,58 +587,62 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                _CleanerInfoTile(
-                  label: 'Имя',
-                  value: name,
-                  showEditIcon: true,
-                  onTap: () => _showEditFieldSheet(
-                    context,
-                    widget.controller,
-                    ProfileInfoField(
-                      type: ProfileInfoFieldType.name,
+                _CleanerInfoGroup(
+                  children: [
+                    _CleanerInfoTile(
                       label: 'Имя',
                       value: name,
-                      isEditable: true,
+                      showEditIcon: true,
+                      onTap: () => _showEditFieldSheet(
+                        context,
+                        widget.controller,
+                        ProfileInfoField(
+                          type: ProfileInfoFieldType.name,
+                          label: 'Имя',
+                          value: name,
+                          isEditable: true,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _CleanerInfoTile(
-                  label: 'Опыт работы',
-                  value: description,
-                  showEditIcon: true,
-                  onTap: () => _showEditFieldSheet(
-                    context,
-                    widget.controller,
-                    ProfileInfoField(
-                      type: ProfileInfoFieldType.description,
+                    const SizedBox(height: 12),
+                    _CleanerInfoTile(
                       label: 'Опыт работы',
                       value: description,
-                      isEditable: true,
+                      showEditIcon: true,
+                      onTap: () => _showEditFieldSheet(
+                        context,
+                        widget.controller,
+                        ProfileInfoField(
+                          type: ProfileInfoFieldType.description,
+                          label: 'Опыт работы',
+                          value: description,
+                          isEditable: true,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _CleanerInfoTile(
-                  label: 'Номер телефона',
-                  value: phone,
-                  showEditIcon: false,
-                ),
-                const SizedBox(height: 12),
-                _CleanerInfoTile(
-                  label: 'Эл. почта',
-                  value: email,
-                  showEditIcon: true,
-                  onTap: () => _showEditFieldSheet(
-                    context,
-                    widget.controller,
-                    ProfileInfoField(
-                      type: ProfileInfoFieldType.email,
+                    const SizedBox(height: 12),
+                    _CleanerInfoTile(
+                      label: 'Номер телефона',
+                      value: phone,
+                      showEditIcon: false,
+                    ),
+                    const SizedBox(height: 12),
+                    _CleanerInfoTile(
                       label: 'Эл. почта',
                       value: email,
-                      isEditable: true,
+                      showEditIcon: true,
+                      onTap: () => _showEditFieldSheet(
+                        context,
+                        widget.controller,
+                        ProfileInfoField(
+                          type: ProfileInfoFieldType.email,
+                          label: 'Эл. почта',
+                          value: email,
+                          isEditable: true,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 18),
                 _CleanerMenuButton(
@@ -666,51 +671,6 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
       return '-';
     }
     return value;
-  }
-}
-
-class _CleanerProfileHeader extends StatelessWidget {
-  const _CleanerProfileHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: _profileBlockDecoration(),
-      child: Row(
-        children: [
-          const SizedBox(
-            height: 40,
-            width: 40,
-            child: Icon(
-              Icons.person_outline,
-              color: AppColors.primary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Ваш профиль',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 0),
-              Text(
-                'Клинер Klinomania',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -767,6 +727,22 @@ class _CleanerInfoTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CleanerInfoGroup extends StatelessWidget {
+  const _CleanerInfoGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: _profileSectionDecoration(),
+      child: Column(children: children),
     );
   }
 }

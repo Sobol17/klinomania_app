@@ -152,6 +152,7 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Color statusColor = _statusColor(order.status);
+    final metaLabel = _cleanerOrderMetaLabel(order);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -163,7 +164,7 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: order.highlightCard ? AppColors.softBlue : Colors.white,
           borderRadius: BorderRadius.circular(AppStyle.cardRadius),
           border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
         ),
@@ -211,8 +212,22 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
+            if (metaLabel != null) ...[
+              Text(
+                metaLabel,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             Text(
               order.address,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -222,6 +237,23 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
       ),
     );
   }
+
+  String? _cleanerOrderMetaLabel(CleanerOrder order) {
+    final parts = <String>[];
+    if (order.objectType.trim().isNotEmpty) {
+      parts.add(order.objectType.trim());
+    }
+    final services = order.services
+        .where((service) => service.enabled)
+        .map((service) => service.label.trim())
+        .where((label) => label.isNotEmpty)
+        .take(2)
+        .toList(growable: false);
+    if (services.isNotEmpty) {
+      parts.add(services.join(', '));
+    }
+    return parts.isEmpty ? null : parts.join(' / ');
+  }
 }
 
 class _CleanerHistoryHeader extends StatelessWidget {
@@ -230,51 +262,25 @@ class _CleanerHistoryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.softBlue,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(
-              Icons.history_toggle_off,
-              color: AppColors.primary,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'История заказов',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontFamily: 'LovelaceText',
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'История заказов',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Следите за статусом заявок и просматривайте завершённые работы.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Следите за статусом заявок и просматривайте завершённые работы.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 14,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

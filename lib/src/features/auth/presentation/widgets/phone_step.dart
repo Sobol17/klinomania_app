@@ -60,7 +60,7 @@ class _PhoneStepState extends State<PhoneStep> {
         Text(
           'Введите номер телефона',
           style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 16),

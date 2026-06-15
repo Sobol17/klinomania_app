@@ -26,7 +26,6 @@ class InfoPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(AppStyle.inputRadius),
-        border: dark ? null : Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

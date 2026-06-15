@@ -17,6 +17,8 @@ class OrderHistoryItemModel {
     required this.windowCleaning,
     required this.paymentMethod,
     required this.totalPrice,
+    this.roomsDescription,
+    this.additionalOptions = const [],
   });
 
   final String id;
@@ -34,6 +36,8 @@ class OrderHistoryItemModel {
   final bool windowCleaning;
   final String paymentMethod;
   final double totalPrice;
+  final String? roomsDescription;
+  final List<String> additionalOptions;
 
   factory OrderHistoryItemModel.fromJson(Map<String, dynamic> json) {
     return OrderHistoryItemModel(
@@ -52,6 +56,12 @@ class OrderHistoryItemModel {
       windowCleaning: json['window_cleaning'] == true,
       paymentMethod: json['payment_method']?.toString() ?? '',
       totalPrice: _parseDouble(json['total_price']),
+      roomsDescription: _stringOrNull(
+        json['rooms_description'] ?? json['roomsDescription'],
+      ),
+      additionalOptions: _stringList(
+        json['additional_options'] ?? json['additionalOptions'],
+      ),
     );
   }
 
@@ -60,10 +70,10 @@ class OrderHistoryItemModel {
     final statusLabel = _statusLabel(mappedStatus);
     final formattedAddress = _formatAddress();
     final mappedPayment = _formatPaymentMethod(paymentMethod);
-    final rawServiceName = cleaningType.isNotEmpty
-        ? cleaningType
-        : propertyType.isNotEmpty
+    final rawServiceName = propertyType.isNotEmpty
         ? propertyType
+        : cleaningType.isNotEmpty
+        ? cleaningType
         : 'Уборка';
     final serviceName = _mapPlanName(rawServiceName);
     final baseCleaningLabel = cleaningType.isNotEmpty
@@ -71,7 +81,7 @@ class OrderHistoryItemModel {
         : propertyType.isNotEmpty
         ? propertyType
         : '-';
-    final mappedBaseLabel = _mapPlanName(baseCleaningLabel);
+    final mappedBaseLabel = _mapCleaningTypeLabel(baseCleaningLabel);
     final cleaningLabel = windowCleaning
         ? '$mappedBaseLabel + Мойка окон'
         : mappedBaseLabel;
@@ -86,6 +96,8 @@ class OrderHistoryItemModel {
       paymentMethod: mappedPayment,
       scheduledAt: scheduledAt,
       area: areaSqm > 0 ? areaSqm : null,
+      roomsDescription: roomsDescription,
+      additionalOptions: additionalOptions,
       startStatusLabel: statusLabel,
       endStatusLabel: statusLabel,
       durationLabel: statusLabel,
@@ -125,6 +137,22 @@ class OrderHistoryItemModel {
       return double.tryParse(value) ?? 0;
     }
     return 0;
+  }
+
+  static String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const [];
   }
 
   static OrderHistoryStatus _mapStatus(String value) {
@@ -183,15 +211,31 @@ class OrderHistoryItemModel {
     final normalized = value.toLowerCase();
     switch (normalized) {
       case 'standard':
-        return 'Стандарт';
+        return 'Базовый минимум';
       case 'express':
-        return 'Экспресс';
+        return 'Базовый минимум';
       case 'premium':
-        return 'Премиум';
+        return 'Генеральская';
       case 'cottage':
-        return 'Коттедж';
+        return 'Роскошный максимум';
       case 'support':
-        return 'Поддержка чистоты';
+        return 'Базовый минимум';
+      default:
+        return value;
+    }
+  }
+
+  static String _mapCleaningTypeLabel(String value) {
+    final normalized = value.toLowerCase();
+    switch (normalized) {
+      case 'standard':
+      case 'express':
+      case 'support':
+        return 'Расширенная поддерживающая уборка';
+      case 'premium':
+        return 'Глубокая уборка с проработкой деталей';
+      case 'cottage':
+        return 'Премиальный клининг «всё включено»';
       default:
         return value;
     }

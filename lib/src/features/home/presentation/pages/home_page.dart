@@ -103,7 +103,7 @@ class _HomeTabState extends State<_HomeTab> {
                         icon: Icons.cleaning_services_outlined,
                       );
                     }
-                    return _ServiceColumns(services: services);
+                    return _ServicesList(services: services);
                   },
                 ),
               ],
@@ -115,87 +115,45 @@ class _HomeTabState extends State<_HomeTab> {
   }
 }
 
-class _ServiceColumns extends StatelessWidget {
-  const _ServiceColumns({required this.services});
+class _ServicesList extends StatelessWidget {
+  const _ServicesList({required this.services});
 
   final List<CleaningService> services;
 
-  static const double _spacing = 12;
-
   @override
   Widget build(BuildContext context) {
-    final List<CleaningService> left = [];
-    final List<CleaningService> right = [];
-    for (int i = 0; i < services.length; i++) {
-      if (i.isEven) {
-        left.add(services[i]);
-      } else {
-        right.add(services[i]);
-      }
-    }
-
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (left.isNotEmpty)
-                Expanded(
-                  child: _buildServiceCard(context, left[0], minHeight: 180),
-                ),
-              if (left.isNotEmpty && right.isNotEmpty)
-                const SizedBox(width: _spacing),
-              if (right.isNotEmpty)
-                Expanded(
-                  child: _buildServiceCard(context, right[0], minHeight: 180),
-                ),
-            ],
+        Text(
+          'Выберите уборку',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.textPrimary,
+            fontFamily: 'LovelaceText',
+            fontWeight: FontWeight.w400,
+            height: 1.08,
           ),
         ),
-        const SizedBox(height: _spacing),
-        if (left.length > 1)
-          _buildServiceCard(context, left[1], minHeight: 180),
-        const SizedBox(height: _spacing),
-        if (right.length > 1)
-          Row(
-            children: [
-              Expanded(
-                child: _buildServiceCard(context, right[1], minHeight: 170),
-              ),
-            ],
+        const SizedBox(height: 8),
+        Text(
+          'Три тарифа для разных сценариев: от регулярной поддержки до максимального набора услуг.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.35,
           ),
-        const SizedBox(height: _spacing),
-        if (left.length > 2 || right.length > 2)
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (left.length > 2)
-                  Expanded(
-                    child: _buildServiceCard(context, left[2], minHeight: 140),
-                  ),
-                if (left.length > 2 && right.length > 2)
-                  const SizedBox(width: _spacing),
-                if (right.length > 2)
-                  Expanded(
-                    child: _buildServiceCard(context, right[2], minHeight: 150),
-                  ),
-              ],
-            ),
-          ),
+        ),
+        const SizedBox(height: 16),
+        for (int i = 0; i < services.length; i++) ...[
+          _buildServiceCard(context, services[i]),
+          if (i != services.length - 1) const SizedBox(height: 14),
+        ],
       ],
     );
   }
 
-  Widget _buildServiceCard(
-    BuildContext context,
-    CleaningService service, {
-    required double minHeight,
-  }) {
+  Widget _buildServiceCard(BuildContext context, CleaningService service) {
     return HomeServiceCard(
       service: service,
-      minHeight: minHeight,
       onTap: () => _openService(context, service),
     );
   }

@@ -17,6 +17,8 @@ class CleanerOrderItemModel {
     required this.windowCleaning,
     required this.paymentMethod,
     required this.totalPrice,
+    this.roomsDescription,
+    this.additionalOptions = const [],
   });
 
   final String id;
@@ -34,6 +36,8 @@ class CleanerOrderItemModel {
   final bool windowCleaning;
   final String paymentMethod;
   final double totalPrice;
+  final String? roomsDescription;
+  final List<String> additionalOptions;
 
   factory CleanerOrderItemModel.fromJson(Map<String, dynamic> json) {
     return CleanerOrderItemModel(
@@ -52,26 +56,28 @@ class CleanerOrderItemModel {
       windowCleaning: _parseBool(json['window_cleaning']),
       paymentMethod: json['payment_method']?.toString() ?? '',
       totalPrice: _parseDouble(json['total_price']),
+      roomsDescription: _stringOrNull(
+        json['rooms_description'] ?? json['roomsDescription'],
+      ),
+      additionalOptions: _stringList(
+        json['additional_options'] ?? json['additionalOptions'],
+      ),
     );
   }
 
   CleanerOrder toEntity() {
     final statusValue = _mapStatus(status);
-    final rawPlanName = cleaningType.isNotEmpty
-        ? cleaningType
-        : propertyType.isNotEmpty
-        ? propertyType
-        : 'Уборка';
-    final planName = _mapPlanName(rawPlanName);
-    final rawObjectType = propertyType.isNotEmpty
+    final rawPlanName = propertyType.isNotEmpty
         ? propertyType
         : cleaningType.isNotEmpty
         ? cleaningType
         : 'Уборка';
-    final objectType = _mapPlanName(rawObjectType);
+    final planName = _mapPlanName(rawPlanName);
+    final objectType = roomsDescription ?? 'Квартира';
     final services = _buildServices(
-      baseLabel: planName,
+      baseLabel: _mapCleaningTypeLabel(cleaningType),
       windowCleaning: windowCleaning,
+      additionalOptions: additionalOptions,
     );
 
     return CleanerOrder(
@@ -122,11 +128,21 @@ class CleanerOrderItemModel {
   static List<CleanerOrderServiceOption> _buildServices({
     required String baseLabel,
     required bool windowCleaning,
+    required List<String> additionalOptions,
   }) {
-    return [
-      CleanerOrderServiceOption(label: baseLabel),
-      CleanerOrderServiceOption(label: 'Мойка окон', enabled: windowCleaning),
-    ];
+    final services = <CleanerOrderServiceOption>[];
+    if (baseLabel.isNotEmpty && baseLabel != '-') {
+      services.add(CleanerOrderServiceOption(label: baseLabel));
+    }
+    services.addAll(
+      additionalOptions.map(
+        (option) => CleanerOrderServiceOption(label: option),
+      ),
+    );
+    if (windowCleaning) {
+      services.add(const CleanerOrderServiceOption(label: 'Моем окна'));
+    }
+    return services;
   }
 
   static CleanerOrderStatus _mapStatus(String value) {
@@ -178,15 +194,49 @@ class CleanerOrderItemModel {
     return false;
   }
 
+  static String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const [];
+  }
+
   static String _mapPlanName(String value) {
     final normalized = value.toLowerCase();
     switch (normalized) {
       case 'standard':
-        return 'Стандарт';
       case 'express':
-        return 'Экспресс';
+      case 'support':
+        return 'Базовый минимум';
       case 'premium':
-        return 'Премиум';
+        return 'Генеральская';
+      case 'cottage':
+        return 'Роскошный максимум';
+      default:
+        return value;
+    }
+  }
+
+  static String _mapCleaningTypeLabel(String value) {
+    final normalized = value.toLowerCase();
+    switch (normalized) {
+      case 'standard':
+      case 'express':
+      case 'support':
+        return 'Расширенная поддерживающая уборка';
+      case 'premium':
+        return 'Глубокая уборка с проработкой деталей';
+      case 'cottage':
+        return 'Премиальный клининг «всё включено»';
       default:
         return value;
     }
