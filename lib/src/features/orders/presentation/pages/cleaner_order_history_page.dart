@@ -166,7 +166,6 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: order.highlightCard ? AppColors.softBlue : Colors.white,
           borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.9)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
