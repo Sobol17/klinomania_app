@@ -352,11 +352,13 @@ class _ProfileSummaryCard extends StatelessWidget {
     required this.name,
     required this.phone,
     required this.email,
+    this.subtitle,
   });
 
   final String name;
   final String phone;
   final String email;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -395,6 +397,17 @@ class _ProfileSummaryCard extends StatelessWidget {
                     height: 1.1,
                   ),
                 ),
+                if (subtitle != null && subtitle!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
                 if (phone.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
@@ -571,7 +584,12 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ProfileSummaryCard(name: name, phone: phone, email: email),
+                _ProfileSummaryCard(
+                  name: name,
+                  phone: '',
+                  email: '',
+                  subtitle: 'Команда Klinomania',
+                ),
                 const SizedBox(height: 18),
                 if (widget.controller.isLoading && profile == null)
                   const Padding(
@@ -589,21 +607,7 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
                 ],
                 _CleanerInfoGroup(
                   children: [
-                    _CleanerInfoTile(
-                      label: 'Имя',
-                      value: name,
-                      showEditIcon: true,
-                      onTap: () => _showEditFieldSheet(
-                        context,
-                        widget.controller,
-                        ProfileInfoField(
-                          type: ProfileInfoFieldType.name,
-                          label: 'Имя',
-                          value: name,
-                          isEditable: true,
-                        ),
-                      ),
-                    ),
+                    _CleanerInfoTile(label: 'Имя', value: name),
                     const SizedBox(height: 12),
                     _CleanerInfoTile(
                       label: 'Опыт работы',
@@ -627,21 +631,7 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
                       showEditIcon: false,
                     ),
                     const SizedBox(height: 12),
-                    _CleanerInfoTile(
-                      label: 'Эл. почта',
-                      value: email,
-                      showEditIcon: true,
-                      onTap: () => _showEditFieldSheet(
-                        context,
-                        widget.controller,
-                        ProfileInfoField(
-                          type: ProfileInfoFieldType.email,
-                          label: 'Эл. почта',
-                          value: email,
-                          isEditable: true,
-                        ),
-                      ),
-                    ),
+                    _CleanerInfoTile(label: 'Эл. почта', value: email),
                   ],
                 ),
                 const SizedBox(height: 18),

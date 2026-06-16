@@ -157,7 +157,8 @@ class _CleanerOrderHistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => CleanerOrderDetailsPage(order: order),
+          builder: (_) =>
+              CleanerOrderDetailsPage(order: order, isHistoryView: true),
         ),
       ),
       child: Container(

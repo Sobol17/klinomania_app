@@ -158,8 +158,8 @@ class CleanerOrdersController extends ChangeNotifier {
     if (existing.isCompleted) {
       return 'Заказ уже завершен';
     }
-    if (!_startedOrderIds.contains(orderId)) {
-      return 'Сначала начните выполнение';
+    if (existing.status != CleanerOrderStatus.assigned) {
+      return 'Сначала примите заказ';
     }
 
     _completingOrderId = orderId;

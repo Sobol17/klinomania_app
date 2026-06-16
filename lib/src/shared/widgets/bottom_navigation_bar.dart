@@ -8,10 +8,12 @@ class CustomBottomNavigation extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onDestinationSelected,
+    this.firstLabel = 'Уборки',
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
+  final String firstLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -61,20 +63,20 @@ class CustomBottomNavigation extends StatelessWidget {
           unselectedFontSize: labelStyle.fontSize ?? 12,
           currentIndex: currentIndex,
           onTap: onDestinationSelected,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: _NavIcon(
+              icon: const _NavIcon(
                 asset: 'assets/icons/navigation/cleaning.svg',
                 activeAsset: 'assets/icons/navigation/cleaning.svg',
               ),
-              activeIcon: _NavIcon(
+              activeIcon: const _NavIcon(
                 asset: 'assets/icons/navigation/cleaning.svg',
                 activeAsset: 'assets/icons/navigation/cleaning.svg',
                 isActive: true,
               ),
-              label: 'Уборки',
+              label: firstLabel,
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: _NavIcon(
                 asset: 'assets/icons/navigation/time.svg',
                 activeAsset: 'assets/icons/navigation/time.svg',
@@ -86,7 +88,7 @@ class CustomBottomNavigation extends StatelessWidget {
               ),
               label: 'История',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: _NavIcon(
                 asset: 'assets/icons/navigation/profile.svg',
                 activeAsset: 'assets/icons/navigation/profile.svg',

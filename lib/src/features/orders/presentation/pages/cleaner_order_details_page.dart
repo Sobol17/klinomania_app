@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_back_button.dart';
 import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../../home/presentation/widgets/home_background.dart';
-import '../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/cleaner_order.dart';
 import '../controllers/cleaner_orders_controller.dart';
 import '../utils/order_history_formatters.dart';
+import 'cleaner_order_checklist_page.dart';
 
 class CleanerOrderDetailsPage extends StatelessWidget {
-  const CleanerOrderDetailsPage({super.key, required this.order});
+  const CleanerOrderDetailsPage({
+    super.key,
+    required this.order,
+    this.isHistoryView = false,
+  });
 
   final CleanerOrder order;
+  final bool isHistoryView;
 
   void _showSnack(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
@@ -31,31 +37,12 @@ class CleanerOrderDetailsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _startOrder(BuildContext context) async {
-    final controller = context.read<CleanerOrdersController>();
-    final error = await controller.startOrder(order.id);
-    if (!context.mounted) return;
-    if (error == null) {
-      _showSnack(context, 'Выполнение начато');
-    } else {
-      _showSnack(context, error);
-    }
-  }
-
-  Future<void> _completeOrder(BuildContext context) async {
-    final controller = context.read<CleanerOrdersController>();
-    final error = await controller.completeOrder(order.id);
-    if (!context.mounted) return;
-    if (error == null) {
-      _showSnack(context, 'Заказ завершен');
-    } else {
-      _showSnack(context, error);
-    }
+  void _contactManager(BuildContext context) {
+    _showSnack(context, 'Свяжем вас с менеджером');
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final controller = context.watch<CleanerOrdersController>();
     final CleanerOrder activeOrder = controller.orders.firstWhere(
       (existing) => existing.id == order.id,
@@ -63,11 +50,7 @@ class CleanerOrderDetailsPage extends StatelessWidget {
     );
     final bool isCompleted = activeOrder.isCompleted;
     final bool canAccept = activeOrder.canAccept;
-    final bool isStarted = controller.isStarted(activeOrder.id);
     final bool isAccepting = controller.isAccepting(activeOrder.id);
-    final bool isStarting = controller.isStarting(activeOrder.id);
-    final bool isCompleting = controller.isCompleting(activeOrder.id);
-    final bool isProgressLoading = isStarting || isCompleting;
     final String actionLabel;
     if (canAccept) {
       actionLabel = 'Принять заказ';
@@ -86,18 +69,6 @@ class CleanerOrderDetailsPage extends StatelessWidget {
             }
           };
     final bool showProgressActions = !isCompleted && !canAccept;
-    final String progressLabel = isStarted
-        ? 'Завершить заказ'
-        : 'Начать выполнение';
-    final VoidCallback? progressAction = showProgressActions
-        ? () {
-            if (isStarted) {
-              _completeOrder(context);
-            } else {
-              _startOrder(context);
-            }
-          }
-        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -120,41 +91,66 @@ class CleanerOrderDetailsPage extends StatelessWidget {
                         _OrderHeaderCard(order: activeOrder),
                         const SizedBox(height: 16),
                         _CleanerOrderDetailsCard(order: activeOrder),
-                        const SizedBox(height: 18),
-                        Theme(
-                          data: theme.copyWith(
-                            colorScheme: theme.colorScheme.copyWith(
-                              primary: AppColors.success,
-                            ),
+                        if (!isHistoryView) ...[
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CTAButton(
+                                  label: 'Как добраться?',
+                                  onPressed: () => _showSnack(
+                                    context,
+                                    'Скоро построим маршрут',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: CTAButton(
+                                  label: 'Задать вопрос',
+                                  variant: CTAButtonVariant.outline,
+                                  onPressed: () => _contactManager(context),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: CTAButton(
-                            label: 'Как добраться?',
-                            onPressed: () =>
-                                _showSnack(context, 'Скоро построим маршрут'),
-                          ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: showProgressActions
+                  child: isHistoryView
+                      ? CTAButton(
+                          label: 'Задать вопрос',
+                          variant: CTAButtonVariant.outline,
+                          onPressed: () => _contactManager(context),
+                        )
+                      : showProgressActions
                       ? Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CTAButton(
-                              label: progressLabel,
-                              onPressed: isProgressLoading
-                                  ? null
-                                  : progressAction,
-                              isLoading: isProgressLoading,
+                              label: 'Чеклист уборки',
+                              leading: const Icon(
+                                Icons.checklist_outlined,
+                                size: 22,
+                                color: AppColors.white,
+                              ),
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => CleanerOrderChecklistPage(
+                                    order: activeOrder,
+                                  ),
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             CTAButton(
                               label: 'Связаться с клиентом',
                               variant: CTAButtonVariant.outline,
-                              onPressed: isProgressLoading ? null : action,
+                              onPressed: action,
                             ),
                           ],
                         )

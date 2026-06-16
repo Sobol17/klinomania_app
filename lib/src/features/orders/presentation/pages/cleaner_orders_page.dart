@@ -16,7 +16,7 @@ class CleanerOrdersPage extends StatefulWidget {
 }
 
 class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
-  CleanerOrdersFilter _filter = CleanerOrdersFilter.myOrders;
+  CleanerOrdersFilter _filter = CleanerOrdersFilter.all;
 
   @override
   void initState() {
@@ -72,7 +72,7 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Мои заказы',
+                          'Заявки на уборку',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -94,20 +94,11 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Заказы',
+                          'Заявки',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (controller.errorMessage != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            controller.errorMessage!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.danger,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -123,39 +114,49 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
   }
 
   List<CleanerOrder> _filteredOrders(List<CleanerOrder> orders) {
+    bool isActive(CleanerOrder order) => !order.isCompleted;
+
     switch (_filter) {
-      case CleanerOrdersFilter.myOrders:
+      case CleanerOrdersFilter.all:
+        return orders.where(isActive).toList(growable: false);
+      case CleanerOrdersFilter.basic:
         return orders
-            .where((order) => !order.isCompleted)
+            .where(
+              (order) => isActive(order) && order.planName == 'Базовый минимум',
+            )
             .toList(growable: false);
-      case CleanerOrdersFilter.standard:
+      case CleanerOrdersFilter.general:
         return orders
-            .where((order) => order.planName == 'Стандарт')
+            .where(
+              (order) => isActive(order) && order.planName == 'Генеральская',
+            )
             .toList(growable: false);
-      case CleanerOrdersFilter.completed:
+      case CleanerOrdersFilter.luxury:
         return orders
-            .where((order) => order.isCompleted)
+            .where(
+              (order) =>
+                  isActive(order) && order.planName == 'Роскошный максимум',
+            )
             .toList(growable: false);
     }
   }
 }
 
-enum CleanerOrdersFilter { myOrders, standard, completed }
+enum CleanerOrdersFilter { all, basic, general, luxury }
 
 extension CleanerOrdersFilterData on CleanerOrdersFilter {
   String get label {
     switch (this) {
-      case CleanerOrdersFilter.myOrders:
-        return 'Все заказы';
-      case CleanerOrdersFilter.standard:
-        return 'Стандарт';
-      case CleanerOrdersFilter.completed:
-        return 'Завершен';
+      case CleanerOrdersFilter.all:
+        return 'Все';
+      case CleanerOrdersFilter.basic:
+        return 'Базовый минимум';
+      case CleanerOrdersFilter.general:
+        return 'Генеральская';
+      case CleanerOrdersFilter.luxury:
+        return 'Роскошный максимум';
     }
   }
-
-  IconData? get icon =>
-      this == CleanerOrdersFilter.myOrders ? Icons.schedule : null;
 }
 
 class _CleanerOrdersFilterBar extends StatelessWidget {
@@ -167,60 +168,49 @@ class _CleanerOrdersFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      children: CleanerOrdersFilter.values.map((filter) {
-        final bool isSelected = value == filter;
-        final Color background = isSelected
-            ? AppColors.primary
-            : AppColors.surface;
-        final Color borderColor = isSelected
-            ? AppColors.primary
-            : AppColors.border.withValues(alpha: 0.9);
-        final Color textColor = isSelected
-            ? AppColors.white
-            : AppColors.textPrimary;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: CleanerOrdersFilter.values.map((filter) {
+          final bool isSelected = value == filter;
+          final Color background = isSelected
+              ? AppColors.primary
+              : AppColors.surface;
+          final Color borderColor = isSelected
+              ? AppColors.primary
+              : AppColors.border.withValues(alpha: 0.9);
+          final Color textColor = isSelected
+              ? AppColors.white
+              : AppColors.textPrimary;
 
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
               onTap: () => onChanged(filter),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: background,
-                  borderRadius: BorderRadius.circular(AppStyle.cardRadius),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: borderColor),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (filter.icon != null) ...[
-                      Icon(filter.icon, color: textColor, size: 18),
-                      const SizedBox(width: 6),
-                    ],
-                    Flexible(
-                      child: Text(
-                        filter.label,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: textColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  filter.label,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -246,7 +236,6 @@ class _CleanerOrderCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: highlight ? AppColors.softBlue : AppColors.surface,
           borderRadius: BorderRadius.circular(AppStyle.cardRadius),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.85)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +308,7 @@ class _CleanerOrderCard extends StatelessWidget {
 
   bool _isPremium(String planName) {
     final normalized = planName.trim().toLowerCase();
-    return normalized == 'премиум' || normalized == 'premium';
+    return normalized == 'роскошный максимум' || normalized == 'premium';
   }
 }
 
@@ -333,14 +322,17 @@ class _EmptyOrdersPlaceholder extends StatelessWidget {
     final theme = Theme.of(context);
     late final String message;
     switch (filter) {
-      case CleanerOrdersFilter.completed:
-        message = 'Завершённых заказов пока нет';
+      case CleanerOrdersFilter.basic:
+        message = 'Нет доступных заявок по услуге «Базовый минимум»';
         break;
-      case CleanerOrdersFilter.standard:
-        message = 'Нет доступных заказов в тарифе «Стандарт»';
+      case CleanerOrdersFilter.general:
+        message = 'Нет доступных заявок по услуге «Генеральская»';
         break;
-      case CleanerOrdersFilter.myOrders:
-        message = 'Новые заказы появятся в ближайшее время';
+      case CleanerOrdersFilter.luxury:
+        message = 'Нет доступных заявок по услуге «Роскошный максимум»';
+        break;
+      case CleanerOrdersFilter.all:
+        message = 'Новые заявки появятся в ближайшее время';
         break;
     }
 

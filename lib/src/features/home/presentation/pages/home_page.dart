@@ -37,6 +37,7 @@ class HomePage extends StatelessWidget {
           bottomNavigationBar: CustomBottomNavigation(
             currentIndex: controller.currentNavigationIndex,
             onDestinationSelected: controller.selectNavigationIndex,
+            firstLabel: isCleaner ? 'Заявки' : 'Уборки',
           ),
           body: IndexedStack(
             index: controller.currentNavigationIndex,
