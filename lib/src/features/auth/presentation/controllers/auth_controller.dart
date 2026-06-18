@@ -3,14 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-enum AuthStep {
-  welcome,
-  phoneInput,
-  otpInput,
-  infoFill,
-  cleanerLogin,
-  authenticated,
-}
+enum AuthStep { welcome, phoneInput, otpInput, cleanerLogin, authenticated }
 
 class AuthController extends ChangeNotifier {
   AuthController({required this.repository, this.useApi = true});
@@ -24,9 +17,6 @@ class AuthController extends ChangeNotifier {
   String _phoneNumber = '';
   AuthSession? _session;
   UserRole _role = UserRole.client;
-  String? _lastSubmittedName;
-  String? _lastSubmittedEmail;
-  String? _lastSubmittedAddress;
 
   AuthStep get step => _step;
   bool get isLoading => _isLoading;
@@ -35,9 +25,6 @@ class AuthController extends ChangeNotifier {
   AuthSession? get session => _session;
   UserRole get role => _role;
   bool get isAuthenticated => _step == AuthStep.authenticated;
-  String? get lastSubmittedName => _lastSubmittedName;
-  String? get lastSubmittedEmail => _lastSubmittedEmail;
-  String? get lastSubmittedAddress => _lastSubmittedAddress;
 
   void _setStep(AuthStep step) {
     _step = step;
@@ -217,50 +204,6 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> completeInfoFill({
-    required String name,
-    required String email,
-    required String address,
-  }) async {
-    _errorMessage = null;
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      _lastSubmittedName = name;
-      _lastSubmittedEmail = email;
-      _lastSubmittedAddress = address;
-      if (useApi) {
-        await repository.completeProfile(
-          name: name,
-          email: email,
-          address: address,
-        );
-      } else {
-        await Future<void>.delayed(const Duration(milliseconds: 500));
-      }
-
-      if (_session != null) {
-        final updatedSession = AuthSession(
-          accessToken: _session!.accessToken,
-          tokenType: _session!.tokenType,
-          phoneNumber: _session!.phoneNumber,
-          isNewUser: false,
-          role: _session!.role,
-        );
-        await repository.saveSession(updatedSession);
-        _applySession(updatedSession);
-      } else {
-        _setStep(AuthStep.authenticated);
-      }
-    } catch (error) {
-      _errorMessage = _mapError(error);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> logout() async {
     await repository.clearSession();
     _session = null;
@@ -272,11 +215,7 @@ class AuthController extends ChangeNotifier {
   void _applySession(AuthSession session) {
     _session = session;
     _role = session.role;
-    if (session.isNewUser) {
-      _step = AuthStep.infoFill;
-    } else {
-      _step = AuthStep.authenticated;
-    }
+    _step = AuthStep.authenticated;
   }
 
   String _mapError(Object error) {

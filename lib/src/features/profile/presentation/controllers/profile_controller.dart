@@ -165,12 +165,12 @@ class ProfileController extends ChangeNotifier {
 
   static final ClientProfile _mockProfile = ClientProfile(
     id: 'mock-client',
-    name: 'Георгий Феодалов',
+    name: '',
     phone: '+7 998 12-632-31',
-    email: 'mail@gmail.com',
+    email: '',
     dateOfBirth: null,
     role: UserRole.client,
-    address: 'ул. Пушкина, 10',
+    address: '',
     description:
         'Аккуратный и ответственный клинер. Быстро и качественно наведу порядок в любых помещениях.',
     createdAt: null,

@@ -27,7 +27,7 @@ class _OtpStepState extends State<OtpStep> {
         Text(
           'Код из СМС',
           style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 8),
@@ -54,7 +54,7 @@ class _OtpStepState extends State<OtpStep> {
                 'Отправить снова',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),

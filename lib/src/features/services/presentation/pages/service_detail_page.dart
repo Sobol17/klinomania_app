@@ -128,26 +128,14 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                             ),
                             const SizedBox(height: 20),
                           ],
-                          if (config.layout == ServiceDetailLayout.apartment)
-                            _ApartmentOptions(
-                              roomOptions: config.roomOptions ?? const [],
-                              addOnOptions: _addOnOptions(config),
-                              selectedId: _selectedRoomId,
-                              selectedAddOns: _selectedAddOns,
-                              onSelect: _handleRoomSelection,
-                              onAddOnSelect: _handleCleaningSelection,
-                            )
-                          else
-                            _HouseOptions(
-                              area: _area,
-                              areaStep: config.areaStep,
-                              onAreaChanged: _changeArea,
-                              cleaningOptions:
-                                  config.cleaningOptions ?? const [],
-                              selectedId: _selectedCleaningId,
-                              selectedAddOns: _selectedAddOns,
-                              onSelect: _handleCleaningSelection,
-                            ),
+                          _ApartmentOptions(
+                            roomOptions: config.roomOptions ?? const [],
+                            addOnOptions: _addOnOptions(config),
+                            selectedId: _selectedRoomId,
+                            selectedAddOns: _selectedAddOns,
+                            onSelect: _handleRoomSelection,
+                            onAddOnSelect: _handleCleaningSelection,
+                          ),
                         ],
                       ),
                     ),
@@ -593,7 +581,6 @@ class _ApartmentOptions extends StatelessWidget {
             final bool selected = option.id == selectedId;
             return _SelectableCard(
               title: option.label,
-              subtitle: option.area,
               selected: selected,
               onTap: () => onSelect(option.id),
             );
@@ -608,81 +595,6 @@ class _ApartmentOptions extends StatelessWidget {
             onSelect: onAddOnSelect,
           ),
         ],
-      ],
-    );
-  }
-}
-
-class _HouseOptions extends StatelessWidget {
-  const _HouseOptions({
-    required this.area,
-    required this.areaStep,
-    required this.onAreaChanged,
-    required this.cleaningOptions,
-    required this.selectedId,
-    required this.selectedAddOns,
-    required this.onSelect,
-  });
-
-  final double area;
-  final double areaStep;
-  final ValueChanged<double> onAreaChanged;
-  final List<ServiceCleaningOption> cleaningOptions;
-  final String? selectedId;
-  final Set<String> selectedAddOns;
-  final ValueChanged<ServiceCleaningOption> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionHeader(
-          title: 'Параметры уборки',
-          subtitle: 'Укажите площадь и выберите нужный тип работ.',
-        ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            const Icon(Icons.square_foot, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Text(
-              'Площадь',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const Spacer(),
-            _AreaStepper(area: area, step: areaStep, onChanged: onAreaChanged),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 18),
-          child: Divider(height: 1),
-        ),
-        Text(
-          'Вид уборки',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _OptionGrid(
-          children: cleaningOptions.map((option) {
-            final bool selected = option.isAddon
-                ? selectedAddOns.contains(option.id)
-                : option.id == selectedId;
-            return _SelectableCard(
-              title: option.label,
-              subtitle: option.subtitle ?? '',
-              selected: selected,
-              onTap: () => onSelect(option),
-              isAddon: option.isAddon,
-            );
-          }).toList(),
-        ),
       ],
     );
   }
@@ -795,7 +707,6 @@ class _AdditionalOptions extends StatelessWidget {
     return source.map((option) {
       return _SelectableCard(
         title: _formatOptionTitle(option),
-        subtitle: option.subtitle ?? '',
         selected: selectedIds.contains(option.id),
         onTap: () => onSelect(option),
         isAddon: true,
@@ -862,14 +773,12 @@ bool _windowOptionMatchesRoom(
 class _SelectableCard extends StatelessWidget {
   const _SelectableCard({
     required this.title,
-    required this.subtitle,
     required this.selected,
     required this.onTap,
     this.isAddon = false,
   });
 
   final String title;
-  final String subtitle;
   final bool selected;
   final VoidCallback onTap;
   final bool isAddon;
@@ -914,15 +823,6 @@ class _SelectableCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

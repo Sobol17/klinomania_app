@@ -8,11 +8,6 @@ abstract class AuthRepository {
     required String phoneNumber,
     required String password,
   });
-  Future<void> completeProfile({
-    required String name,
-    required String email,
-    required String address,
-  });
   Future<AuthSession?> restoreSession();
   Future<void> saveSession(AuthSession session);
   Future<void> clearSession();

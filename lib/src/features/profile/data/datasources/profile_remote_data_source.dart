@@ -6,12 +6,12 @@ class ProfileRemoteDataSource {
 
   ClientProfileModel _profile = ClientProfileModel(
     id: 'client-1',
-    name: 'Анна Смирнова',
+    name: '',
     phone: '+7 999 123-45-67',
-    email: 'anna@example.com',
+    email: '',
     dateOfBirth: DateTime(1993, 5, 18),
     role: UserRole.client,
-    address: 'ул. Ленина, 10',
+    address: '',
     description: '',
     createdAt: DateTime(2026, 1),
     updatedAt: DateTime(2026, 2),

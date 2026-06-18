@@ -49,7 +49,7 @@ class _PlanCard extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            controller.activePlan,
+            "1 уборка",
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: 14,

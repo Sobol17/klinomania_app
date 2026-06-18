@@ -43,7 +43,6 @@ class _OtpCodeInputState extends State<OtpCodeInput> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(widget.length, (index) {
@@ -55,8 +54,12 @@ class _OtpCodeInputState extends State<OtpCodeInput> {
             enabled: widget.enabled,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: widget.enabled
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
             ),
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,

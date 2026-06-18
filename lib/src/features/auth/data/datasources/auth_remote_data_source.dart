@@ -45,14 +45,6 @@ class AuthRemoteDataSource {
     );
   }
 
-  Future<void> completeProfile({
-    required String name,
-    required String email,
-    required String address,
-  }) async {
-    await _mockDelay();
-  }
-
   Future<void> _mockDelay() {
     return Future<void>.delayed(const Duration(milliseconds: 250));
   }

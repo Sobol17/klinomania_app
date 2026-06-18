@@ -45,19 +45,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> completeProfile({
-    required String name,
-    required String email,
-    required String address,
-  }) {
-    return remoteDataSource.completeProfile(
-      name: name,
-      email: email,
-      address: address,
-    );
-  }
-
-  @override
   Future<AuthSession?> restoreSession() async {
     final session = await localDataSource.loadSession();
     return session?.toEntity();

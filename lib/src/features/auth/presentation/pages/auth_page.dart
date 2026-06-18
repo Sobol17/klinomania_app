@@ -2,19 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../domain/entities/auth_session.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_terms_text.dart';
 import '../widgets/cleaner_login_step.dart';
-import '../widgets/info_step.dart';
 import '../widgets/otp_step.dart';
 import '../widgets/phone_step.dart';
 import '../widgets/welcome_step.dart';
 
-class AuthPage extends StatelessWidget {
+class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
+
+  @override
+  State<AuthPage> createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
+  AuthController? _authController;
+  HomeController? _homeController;
+  bool _wasAuthenticated = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authController = context.read<AuthController>();
+    final homeController = context.read<HomeController>();
+
+    if (_authController != authController) {
+      _authController?.removeListener(_handleAuthChanged);
+      _authController = authController;
+      _authController!.addListener(_handleAuthChanged);
+      _wasAuthenticated = authController.isAuthenticated;
+    }
+
+    _homeController = homeController;
+  }
+
+  @override
+  void dispose() {
+    _authController?.removeListener(_handleAuthChanged);
+    super.dispose();
+  }
+
+  void _handleAuthChanged() {
+    final authController = _authController;
+    final homeController = _homeController;
+    if (authController == null || homeController == null) {
+      return;
+    }
+
+    final isAuthenticated = authController.isAuthenticated;
+    if (isAuthenticated && !_wasAuthenticated) {
+      homeController.selectNavigationIndex(HomeController.servicesTabIndex);
+    }
+    _wasAuthenticated = isAuthenticated;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,8 +149,6 @@ class AuthPage extends StatelessWidget {
         );
       case AuthStep.otpInput:
         return OtpStep(controller: controller);
-      case AuthStep.infoFill:
-        return InfoStep(controller: controller, viewportHeight: viewportHeight);
       case AuthStep.authenticated:
         return const SizedBox.shrink();
     }
@@ -130,9 +173,6 @@ class _BackButton extends StatelessWidget {
         action = controller.backToWelcome;
         break;
       case AuthStep.otpInput:
-        action = controller.backToPhone;
-        break;
-      case AuthStep.infoFill:
         action = controller.backToPhone;
         break;
       case AuthStep.cleanerLogin:

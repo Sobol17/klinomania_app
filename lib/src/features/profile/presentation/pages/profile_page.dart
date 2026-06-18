@@ -569,7 +569,7 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final profile = widget.controller.profile;
-    final name = _valueOrDash(profile?.name);
+    final name = _valueOrDefault(profile?.name, 'Профиль');
     final description = _valueOrDash(profile?.description);
     final phone = _valueOrDash(profile?.phone);
     final email = _valueOrDash(profile?.email);
@@ -657,8 +657,15 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
   }
 
   String _valueOrDash(String? value) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return '-';
+    }
+    return value;
+  }
+
+  String _valueOrDefault(String? value, String fallback) {
+    if (value == null || value.trim().isEmpty) {
+      return fallback;
     }
     return value;
   }
