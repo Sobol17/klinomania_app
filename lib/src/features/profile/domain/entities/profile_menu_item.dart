@@ -1,4 +1,13 @@
-enum ProfileMenuAction { personalData, history, logout, delete }
+enum ProfileMenuAction {
+  personalData,
+  settings,
+  history,
+  about,
+  contacts,
+  legal,
+  logout,
+  delete,
+}
 
 class ProfileMenuItem {
   const ProfileMenuItem({

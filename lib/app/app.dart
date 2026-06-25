@@ -13,12 +13,16 @@ import '../src/features/home/presentation/controllers/home_controller.dart';
 import '../src/features/orders/data/datasources/cleaner_order_history_remote_data_source.dart';
 import '../src/features/orders/data/datasources/cleaner_orders_remote_data_source.dart';
 import '../src/features/orders/data/datasources/order_history_remote_data_source.dart';
+import '../src/features/orders/data/repositories/address_suggestions_repository_impl.dart';
 import '../src/features/orders/data/repositories/cleaner_order_history_repository_impl.dart';
 import '../src/features/orders/data/repositories/cleaner_orders_repository_impl.dart';
 import '../src/features/orders/data/repositories/order_history_repository_impl.dart';
+import '../src/features/orders/data/services/address_suggest_service.dart';
+import '../src/features/orders/domain/repositories/address_suggestions_repository.dart';
 import '../src/features/orders/domain/repositories/cleaner_order_history_repository.dart';
 import '../src/features/orders/domain/repositories/cleaner_orders_repository.dart';
 import '../src/features/orders/domain/repositories/order_history_repository.dart';
+import '../src/features/orders/domain/use_cases/fetch_address_suggestions.dart';
 import '../src/features/orders/presentation/controllers/cleaner_order_history_controller.dart';
 import '../src/features/orders/presentation/controllers/cleaner_orders_controller.dart';
 import '../src/features/orders/presentation/controllers/order_history_controller.dart';
@@ -65,6 +69,17 @@ class App extends StatelessWidget {
         Provider<OrderHistoryRepository>(
           create: (_) => OrderHistoryRepositoryImpl(
             remoteDataSource: OrderHistoryRemoteDataSource(),
+          ),
+        ),
+        Provider<AddressSuggestService>(create: (_) => AddressSuggestService()),
+        Provider<AddressSuggestionsRepository>(
+          create: (context) => AddressSuggestionsRepositoryImpl(
+            service: context.read<AddressSuggestService>(),
+          ),
+        ),
+        Provider<FetchAddressSuggestionsUseCase>(
+          create: (context) => FetchAddressSuggestionsUseCase(
+            repository: context.read<AddressSuggestionsRepository>(),
           ),
         ),
         Provider<CleanerOrderHistoryRepository>(

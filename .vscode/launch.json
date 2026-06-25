@@ -1,0 +1,28 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "klinomania_app",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define=YANDEX_SUGGEST_API_KEY=57f8dafe-0a08-4dc1-adcd-fa723496f369"
+      ]
+    },
+    {
+      "name": "klinomania_app (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "klinomania_app (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}

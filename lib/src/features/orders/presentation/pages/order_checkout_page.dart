@@ -1,5 +1,8 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -10,7 +13,10 @@ import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/widgets/home_background.dart';
 import '../../../services/domain/service_detail_config.dart';
 import '../controllers/order_history_controller.dart';
+import '../../domain/entities/address_suggestion.dart';
+import '../../domain/use_cases/fetch_address_suggestions.dart';
 import '../utils/order_history_formatters.dart';
+import '../widgets/order_date_picker.dart';
 
 class OrderCheckoutPage extends StatefulWidget {
   const OrderCheckoutPage({
@@ -42,12 +48,22 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   late final TextEditingController _apartmentController;
   late final TextEditingController _intercomController;
   late final TextEditingController _commentController;
+  late final TextEditingController _timeController;
+  late final MaskTextInputFormatter _timeMask;
+  Timer? _suggestDebounce;
   late DateTime _date;
   late TimeOfDay _time;
+  List<AddressSuggestion> _addressSuggestions = const [];
+  AddressSuggestion? _selectedAddressSuggestion;
   bool _isSubmitting = false;
+  bool _isSuggestLoading = false;
   String? _errorMessage;
+  bool _timeInputHasError = false;
+  int _suggestRequestId = 0;
 
   static const double _fallbackTotalPrice = 7500;
+  static const Duration _suggestDebounceDuration = Duration(milliseconds: 350);
+
   @override
   void initState() {
     super.initState();
@@ -58,18 +74,26 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     _apartmentController = TextEditingController();
     _intercomController = TextEditingController();
     _commentController = TextEditingController();
+    _timeMask = MaskTextInputFormatter(
+      mask: '##:##',
+      filter: {'#': RegExp(r'[0-9]')},
+      type: MaskAutoCompletionType.lazy,
+    );
     _date = DateTime.now().add(const Duration(days: 1));
     _time = const TimeOfDay(hour: 11, minute: 0);
+    _timeController = TextEditingController(text: _formatTime(_time));
   }
 
   @override
   void dispose() {
+    _suggestDebounce?.cancel();
     _addressController.dispose();
     _entranceController.dispose();
     _floorController.dispose();
     _apartmentController.dispose();
     _intercomController.dispose();
     _commentController.dispose();
+    _timeController.dispose();
     super.dispose();
   }
 
@@ -112,13 +136,21 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                           apartmentController: _apartmentController,
                           intercomController: _intercomController,
                           commentController: _commentController,
+                          suggestions: _addressSuggestions,
+                          isSuggestLoading: _isSuggestLoading,
+                          hasSelectedAddressSuggestion:
+                              _hasSelectedAddressSuggestion,
+                          onAddressChanged: _handleAddressChanged,
+                          onSuggestionSelected: _selectAddressSuggestion,
                         ),
                         const SizedBox(height: 16),
                         _DateTimeSection(
                           date: _date,
-                          time: _time,
+                          timeController: _timeController,
+                          timeFormatter: _timeMask,
+                          timeInputHasError: _timeInputHasError,
                           onSelectDate: _pickDate,
-                          onSelectTime: _pickTime,
+                          onTimeChanged: _handleTimeChanged,
                         ),
                         const SizedBox(height: 16),
                         _OrderDetailsSection(
@@ -133,7 +165,9 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                   total: OrderHistoryFormatters.formatPrice(_totalPrice),
                   isLoading: _isSubmitting,
                   errorMessage: _errorMessage,
-                  onSubmit: _isSubmitting ? null : _submitOrder,
+                  onSubmit: _isSubmitting || !_hasSelectedAddressSuggestion
+                      ? null
+                      : _submitOrder,
                 ),
               ],
             ),
@@ -177,14 +211,37 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
         .toList();
   }
 
+  bool get _hasSelectedAddressSuggestion {
+    final suggestion = _selectedAddressSuggestion;
+    if (suggestion == null) {
+      return false;
+    }
+    return _addressController.text.trim() == suggestion.address.trim();
+  }
+
   Future<void> _submitOrder() async {
     if (_isSubmitting) {
       return;
     }
 
+    if (!_hasSelectedAddressSuggestion) {
+      return;
+    }
+
+    final parsedTime = _parseTime(_timeController.text);
+    if (parsedTime == null) {
+      setState(() {
+        _timeInputHasError = true;
+        _errorMessage = 'Укажите время в формате 00:00-23:59';
+      });
+      return;
+    }
+
     setState(() {
+      _time = parsedTime;
       _isSubmitting = true;
       _errorMessage = null;
+      _timeInputHasError = false;
     });
 
     try {
@@ -216,6 +273,68 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     }
   }
 
+  void _handleAddressChanged(String value) {
+    _suggestDebounce?.cancel();
+    final query = value.trim();
+    final requestId = ++_suggestRequestId;
+
+    setState(() {
+      _selectedAddressSuggestion = null;
+      _addressSuggestions = const [];
+      _isSuggestLoading = false;
+    });
+
+    if (query.length < 3) {
+      return;
+    }
+
+    _suggestDebounce = Timer(
+      _suggestDebounceDuration,
+      () => _loadAddressSuggestions(query, requestId),
+    );
+  }
+
+  Future<void> _loadAddressSuggestions(String query, int requestId) async {
+    if (!mounted || requestId != _suggestRequestId) {
+      return;
+    }
+
+    setState(() => _isSuggestLoading = true);
+
+    try {
+      final suggestions = await context
+          .read<FetchAddressSuggestionsUseCase>()
+          .call(query);
+      if (!mounted || requestId != _suggestRequestId) {
+        return;
+      }
+      setState(() {
+        _addressSuggestions = suggestions;
+        _isSuggestLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _suggestRequestId) {
+        return;
+      }
+      setState(() {
+        _addressSuggestions = const [];
+        _isSuggestLoading = false;
+      });
+    }
+  }
+
+  void _selectAddressSuggestion(AddressSuggestion suggestion) {
+    _suggestDebounce?.cancel();
+    _suggestRequestId++;
+    _addressController.text = suggestion.address.trim();
+    setState(() {
+      _selectedAddressSuggestion = suggestion;
+      _addressSuggestions = const [];
+      _isSuggestLoading = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
   String _mapError(Object error) {
     if (error is StateError && error.message.isNotEmpty) {
       return error.message;
@@ -225,74 +344,64 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   }
 
   Future<void> _pickDate() async {
-    final minimumDate = DateTime.now();
-    final maximumDate = DateTime.now().add(const Duration(days: 365));
-    if (Theme.of(context).platform == TargetPlatform.iOS) {
-      DateTime tempDate = _date;
-      final result = await showCupertinoModalPopup<DateTime>(
-        context: context,
-        builder: (_) => _CupertinoPickerSheet<DateTime>(
-          onSubmitted: () => tempDate,
-          child: CupertinoDatePicker(
-            mode: CupertinoDatePickerMode.date,
-            minimumDate: minimumDate,
-            maximumDate: maximumDate,
-            initialDateTime: _date,
-            onDateTimeChanged: (value) => tempDate = value,
-          ),
-        ),
-      );
-      if (result != null) {
-        setState(() => _date = result);
-      }
-      return;
-    }
-
-    final result = await showDatePicker(
+    final now = DateTime.now();
+    final minimumDate = DateTime(now.year, now.month, now.day);
+    final maximumDate = minimumDate.add(const Duration(days: 365));
+    final result = await showModalBottomSheet<DateTime>(
       context: context,
-      initialDate: _date,
-      firstDate: minimumDate,
-      lastDate: maximumDate,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => OrderDatePicker(
+        initialDate: _date,
+        firstDate: minimumDate,
+        lastDate: maximumDate,
+      ),
     );
     if (result != null) {
       setState(() => _date = result);
     }
   }
 
-  Future<void> _pickTime() async {
-    if (Theme.of(context).platform == TargetPlatform.iOS) {
-      final now = DateTime.now();
-      DateTime tempTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _time.hour,
-        _time.minute,
-      );
-      final result = await showCupertinoModalPopup<DateTime>(
-        context: context,
-        builder: (_) => _CupertinoPickerSheet<DateTime>(
-          onSubmitted: () => tempTime,
-          child: CupertinoDatePicker(
-            mode: CupertinoDatePickerMode.time,
-            use24hFormat: true,
-            initialDateTime: tempTime,
-            onDateTimeChanged: (value) => tempTime = value,
-          ),
-        ),
-      );
-      if (result != null) {
-        setState(
-          () => _time = TimeOfDay(hour: result.hour, minute: result.minute),
-        );
+  void _handleTimeChanged(String value) {
+    final parsedTime = _parseTime(value);
+    setState(() {
+      _timeInputHasError = value.length == 5 && parsedTime == null;
+      if (parsedTime != null) {
+        _time = parsedTime;
       }
-      return;
+      if (_errorMessage == 'Укажите время в формате 00:00-23:59' &&
+          parsedTime != null) {
+        _errorMessage = null;
+      }
+    });
+  }
+
+  TimeOfDay? _parseTime(String value) {
+    if (value.length != 5) {
+      return null;
     }
 
-    final result = await showTimePicker(context: context, initialTime: _time);
-    if (result != null) {
-      setState(() => _time = result);
+    final parts = value.split(':');
+    if (parts.length != 2) {
+      return null;
     }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return null;
+    }
+
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
 
@@ -400,6 +509,11 @@ class _AddressSection extends StatelessWidget {
     required this.apartmentController,
     required this.intercomController,
     required this.commentController,
+    required this.suggestions,
+    required this.isSuggestLoading,
+    required this.hasSelectedAddressSuggestion,
+    required this.onAddressChanged,
+    required this.onSuggestionSelected,
   });
 
   final TextEditingController addressController;
@@ -408,6 +522,11 @@ class _AddressSection extends StatelessWidget {
   final TextEditingController apartmentController;
   final TextEditingController intercomController;
   final TextEditingController commentController;
+  final List<AddressSuggestion> suggestions;
+  final bool isSuggestLoading;
+  final bool hasSelectedAddressSuggestion;
+  final ValueChanged<String> onAddressChanged;
+  final ValueChanged<AddressSuggestion> onSuggestionSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -421,11 +540,13 @@ class _AddressSection extends StatelessWidget {
             subtitle: 'Укажите место, куда должен приехать клинер.',
           ),
           const SizedBox(height: 16),
-          _OrderTextField(
+          _AddressSuggestField(
             controller: addressController,
-            label: 'Улица, дом, корпус',
-            keyboardType: TextInputType.streetAddress,
-            textInputAction: TextInputAction.next,
+            suggestions: suggestions,
+            isLoading: isSuggestLoading,
+            hasSelectedAddressSuggestion: hasSelectedAddressSuggestion,
+            onChanged: onAddressChanged,
+            onSuggestionSelected: onSuggestionSelected,
           ),
           const SizedBox(height: 12),
           Row(
@@ -528,15 +649,19 @@ class _SectionTitle extends StatelessWidget {
 class _DateTimeSection extends StatelessWidget {
   const _DateTimeSection({
     required this.date,
-    required this.time,
+    required this.timeController,
+    required this.timeFormatter,
+    required this.timeInputHasError,
     required this.onSelectDate,
-    required this.onSelectTime,
+    required this.onTimeChanged,
   });
 
   final DateTime date;
-  final TimeOfDay time;
+  final TextEditingController timeController;
+  final TextInputFormatter timeFormatter;
+  final bool timeInputHasError;
   final VoidCallback onSelectDate;
-  final VoidCallback onSelectTime;
+  final ValueChanged<String> onTimeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -561,10 +686,11 @@ class _DateTimeSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _DropdownField(
-                  label:
-                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                  onTap: onSelectTime,
+                child: _TimeInputField(
+                  controller: timeController,
+                  inputFormatter: timeFormatter,
+                  hasError: timeInputHasError,
+                  onChanged: onTimeChanged,
                 ),
               ),
             ],
@@ -861,6 +987,210 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
+class _AddressSuggestField extends StatelessWidget {
+  const _AddressSuggestField({
+    required this.controller,
+    required this.suggestions,
+    required this.isLoading,
+    required this.hasSelectedAddressSuggestion,
+    required this.onChanged,
+    required this.onSuggestionSelected,
+  });
+
+  static const double _fieldHeight = 56;
+  static const double _dropdownGap = 8;
+  static const double _loadingHeight = 46;
+  static const double _itemHeight = 65;
+  static const double _maxDropdownHeight = 236;
+
+  final TextEditingController controller;
+  final List<AddressSuggestion> suggestions;
+  final bool isLoading;
+  final bool hasSelectedAddressSuggestion;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<AddressSuggestion> onSuggestionSelected;
+
+  bool get _showsDropdown => isLoading || suggestions.isNotEmpty;
+
+  double get _dropdownHeight {
+    if (isLoading) {
+      return _loadingHeight;
+    }
+    final height = suggestions.length * _itemHeight;
+    return height.clamp(0, _maxDropdownHeight).toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dropdownHeight = _showsDropdown ? _dropdownHeight : 0.0;
+
+    return SizedBox(
+      height:
+          _fieldHeight + (_showsDropdown ? _dropdownGap + dropdownHeight : 0),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          _OrderTextField(
+            controller: controller,
+            label: 'Улица, дом, корпус',
+            keyboardType: TextInputType.streetAddress,
+            textInputAction: TextInputAction.next,
+            onChanged: onChanged,
+            suffixIcon: hasSelectedAddressSuggestion
+                ? const Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.primary,
+                  )
+                : null,
+          ),
+          if (_showsDropdown)
+            Positioned(
+              top: _fieldHeight + _dropdownGap,
+              left: 0,
+              right: 0,
+              child: _AddressSuggestResults(
+                height: dropdownHeight,
+                suggestions: suggestions,
+                isLoading: isLoading,
+                onSuggestionSelected: onSuggestionSelected,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddressSuggestResults extends StatelessWidget {
+  const _AddressSuggestResults({
+    required this.height,
+    required this.suggestions,
+    required this.isLoading,
+    required this.onSuggestionSelected,
+  });
+
+  final double height;
+  final List<AddressSuggestion> suggestions;
+  final bool isLoading;
+  final ValueChanged<AddressSuggestion> onSuggestionSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: height,
+      child: Material(
+        color: AppColors.surface,
+        elevation: 6,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: isLoading
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Ищем адрес',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: suggestions.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, color: AppColors.border),
+                  itemBuilder: (context, index) {
+                    final suggestion = suggestions[index];
+                    return _AddressSuggestionTile(
+                      suggestion: suggestion,
+                      onTap: () => onSuggestionSelected(suggestion),
+                    );
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddressSuggestionTile extends StatelessWidget {
+  const _AddressSuggestionTile({required this.suggestion, required this.onTap});
+
+  final AddressSuggestion suggestion;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final subtitle = suggestion.subtitle.trim();
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.location_on_outlined,
+              size: 20,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    suggestion.title.isNotEmpty
+                        ? suggestion.title
+                        : suggestion.address,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _OrderTextField extends StatelessWidget {
   const _OrderTextField({
     required this.controller,
@@ -869,6 +1199,8 @@ class _OrderTextField extends StatelessWidget {
     this.textInputAction,
     this.maxLines = 1,
     this.minLines = 1,
+    this.onChanged,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
@@ -877,6 +1209,8 @@ class _OrderTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final int maxLines;
   final int minLines;
+  final ValueChanged<String>? onChanged;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -887,6 +1221,7 @@ class _OrderTextField extends StatelessWidget {
       textInputAction: textInputAction,
       maxLines: maxLines,
       minLines: minLines,
+      onChanged: onChanged,
       style: theme.textTheme.titleMedium,
       decoration: InputDecoration(
         labelText: label,
@@ -904,44 +1239,7 @@ class _OrderTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppStyle.inputRadius),
           borderSide: const BorderSide(color: AppColors.primary),
         ),
-      ),
-    );
-  }
-}
-
-class _CupertinoPickerSheet<T> extends StatelessWidget {
-  const _CupertinoPickerSheet({required this.child, required this.onSubmitted});
-
-  final Widget child;
-  final T Function() onSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        height: 320,
-        color: AppColors.surface,
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: CupertinoButton(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                onPressed: () => Navigator.of(context).pop(onSubmitted()),
-                child: const Text(
-                  'Готово',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(child: child),
-          ],
-        ),
+        suffixIcon: suffixIcon,
       ),
     );
   }
@@ -973,6 +1271,58 @@ class _DropdownField extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TimeInputField extends StatelessWidget {
+  const _TimeInputField({
+    required this.controller,
+    required this.inputFormatter,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final TextInputFormatter inputFormatter;
+  final bool hasError;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [inputFormatter],
+      onChanged: onChanged,
+      style: theme.textTheme.titleMedium,
+      decoration: InputDecoration(
+        hintText: '00:00',
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          borderSide: BorderSide(
+            color: hasError ? AppColors.danger : AppColors.fieldBorder,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppStyle.inputRadius),
+          borderSide: BorderSide(
+            color: hasError ? AppColors.danger : AppColors.primary,
+          ),
+        ),
+        suffixIcon: const Icon(
+          Icons.schedule_outlined,
+          color: AppColors.textSecondary,
         ),
       ),
     );

@@ -345,7 +345,7 @@ class ServicesRemoteDataSource {
         maxArea: 600,
         minPrice: 25000,
       ),
-      roomOptions: const [],
+      roomOptions: _defaultRoomOptions,
       cleaningOptions: const [
         ServiceOptionModel(
           id: 'support',
@@ -364,7 +364,7 @@ class ServicesRemoteDataSource {
           priceModifier: 3500,
         ),
       ],
-      extraOptions: const [],
+      extraOptions: _generalExtraOptions,
       createdAt: null,
       updatedAt: null,
     ),

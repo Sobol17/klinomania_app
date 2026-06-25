@@ -11,6 +11,7 @@ import '../../domain/entities/profile_info_field.dart';
 import '../../domain/entities/profile_menu_item.dart';
 import '../controllers/profile_controller.dart';
 import 'profile_edit_page.dart';
+import 'profile_info_pages.dart';
 
 BoxDecoration _profileBlockDecoration() {
   return BoxDecoration(
@@ -334,8 +335,28 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
           MaterialPageRoute<void>(builder: (_) => const ProfileEditPage()),
         );
         return;
+      case ProfileMenuAction.settings:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProfileSettingsPage()),
+        );
+        return;
       case ProfileMenuAction.history:
         context.read<HomeController>().selectNavigationIndex(1);
+        return;
+      case ProfileMenuAction.about:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProfileAboutPage()),
+        );
+        return;
+      case ProfileMenuAction.contacts:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProfileContactsPage()),
+        );
+        return;
+      case ProfileMenuAction.legal:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProfileLegalPage()),
+        );
         return;
       case ProfileMenuAction.logout:
         widget.onLogout();
@@ -474,9 +495,7 @@ class _ProfileMenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasChevron =
-        item.action == ProfileMenuAction.personalData ||
-        item.action == ProfileMenuAction.history;
+    final hasChevron = _hasChevron(item.action);
     final textColor = item.isDestructive
         ? AppColors.danger
         : AppColors.textPrimary;
@@ -516,6 +535,21 @@ class _ProfileMenuRow extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool _hasChevron(ProfileMenuAction action) {
+    switch (action) {
+      case ProfileMenuAction.personalData:
+      case ProfileMenuAction.settings:
+      case ProfileMenuAction.history:
+      case ProfileMenuAction.about:
+      case ProfileMenuAction.contacts:
+      case ProfileMenuAction.legal:
+        return true;
+      case ProfileMenuAction.logout:
+      case ProfileMenuAction.delete:
+        return false;
+    }
   }
 }
 

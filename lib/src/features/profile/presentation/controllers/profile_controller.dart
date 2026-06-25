@@ -35,15 +35,15 @@ class ProfileController extends ChangeNotifier {
       action: ProfileMenuAction.personalData,
       title: 'Личные данные',
     ),
-    ProfileMenuItem(action: ProfileMenuAction.history, title: 'Настройки'),
+    ProfileMenuItem(action: ProfileMenuAction.settings, title: 'Настройки'),
     ProfileMenuItem(action: ProfileMenuAction.history, title: 'История уборки'),
   ];
 
   final List<ProfileMenuItem> supportMenuItems = const [
-    ProfileMenuItem(action: ProfileMenuAction.history, title: 'О нас'),
-    ProfileMenuItem(action: ProfileMenuAction.history, title: 'Контакты'),
+    ProfileMenuItem(action: ProfileMenuAction.about, title: 'О нас'),
+    ProfileMenuItem(action: ProfileMenuAction.contacts, title: 'Контакты'),
     ProfileMenuItem(
-      action: ProfileMenuAction.history,
+      action: ProfileMenuAction.legal,
       title: 'Правовая информация',
     ),
     ProfileMenuItem(
