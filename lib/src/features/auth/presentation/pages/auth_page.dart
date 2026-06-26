@@ -110,7 +110,8 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                       ),
                       if (step != AuthStep.authenticated &&
-                          step != AuthStep.cleanerLogin) ...[
+                          step != AuthStep.cleanerLogin &&
+                          step != AuthStep.phoneInput) ...[
                         const SizedBox(height: 24),
                         const AuthTermsText(),
                         const SizedBox(height: 16),

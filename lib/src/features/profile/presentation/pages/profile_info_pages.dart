@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import 'profile_legal_documents.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -441,86 +442,18 @@ class _LegalCompanyName extends StatelessWidget {
 class ProfileLegalPage extends StatelessWidget {
   const ProfileLegalPage({super.key});
 
-  static const List<_LegalDocument> _documents = [
-    _LegalDocument(
-      title: 'Пользовательское соглашение',
-      subtitle: 'Правила использования приложения и оформления заказов.',
-      paragraphs: [
-        _LegalParagraph(
-          title: '1. Общие положения',
-          body:
-              'Настоящее пользовательское соглашение определяет порядок использования мобильного приложения Клиномания, выбора услуг клининга и оформления заказов.',
-        ),
-        _LegalParagraph(
-          title: '2. Оформление заказа',
-          body:
-              'Пользователь выбирает тариф, дополнительные опции, дату и время уборки. Перед подтверждением заказа пользователь проверяет адрес, контактные данные и итоговые условия услуги.',
-        ),
-        _LegalParagraph(
-          title: '3. Ответственность сторон',
-          body:
-              'Клиномания стремится обеспечить аккуратное выполнение услуг и своевременную коммуникацию. Пользователь обязуется предоставить достоверную информацию, доступ в помещение и условия для выполнения уборки.',
-        ),
-        _LegalParagraph(
-          title: '4. Изменение условий',
-          body:
-              'Условия заказа могут быть уточнены до начала уборки, если меняется объем работ, адрес, время или перечень дополнительных опций.',
-        ),
-      ],
-    ),
-    _LegalDocument(
-      title: 'Политика конфиденциальности',
-      subtitle: 'Как мы бережно работаем с персональными данными.',
-      paragraphs: [
-        _LegalParagraph(
-          title: '1. Какие данные используются',
-          body:
-              'Для работы сервиса могут использоваться имя, номер телефона, email, адрес уборки, история заказов и комментарии, которые пользователь оставляет при оформлении услуги.',
-        ),
-        _LegalParagraph(
-          title: '2. Зачем нужны данные',
-          body:
-              'Данные помогают оформить заказ, связаться с пользователем, передать клинеру важные детали и улучшать качество сервиса.',
-        ),
-        _LegalParagraph(
-          title: '3. Хранение и защита',
-          body:
-              'Мы используем данные только в рамках работы сервиса и не передаем их третьим лицам без необходимости исполнения заказа или требования закона.',
-        ),
-        _LegalParagraph(
-          title: '4. Управление данными',
-          body:
-              'Пользователь может обновить личные данные в профиле или обратиться в поддержку, если нужно уточнить, изменить или удалить информацию.',
-        ),
-      ],
-    ),
-    _LegalDocument(
-      title: 'Правила оказания услуг',
-      subtitle: 'Что важно знать перед уборкой.',
-      paragraphs: [
-        _LegalParagraph(
-          title: '1. Подготовка к уборке',
-          body:
-              'Перед приходом клинера рекомендуется убрать ценные и хрупкие предметы, обеспечить доступ к воде, электричеству и помещениям, которые нужно убрать.',
-        ),
-        _LegalParagraph(
-          title: '2. Объем работ',
-          body:
-              'Состав уборки зависит от выбранного тарифа и дополнительных опций. Работы, не входящие в выбранный пакет, могут быть согласованы отдельно.',
-        ),
-        _LegalParagraph(
-          title: '3. Комментарии к заказу',
-          body:
-              'Если дома есть деликатные поверхности, животные, сложные загрязнения или зоны с особым приоритетом, это лучше указать при оформлении заказа.',
-        ),
-        _LegalParagraph(
-          title: '4. Приемка результата',
-          body:
-              'После уборки пользователь может проверить результат и передать обратную связь. Если возникают вопросы по качеству, команда поддержки поможет найти решение.',
-        ),
-      ],
-    ),
-  ];
+  static void openDocument(BuildContext context, String title) {
+    for (final document in profileLegalDocuments) {
+      if (document.title == title) {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => _ProfileLegalDocumentPage(document: document),
+          ),
+        );
+        return;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -533,9 +466,14 @@ class ProfileLegalPage extends StatelessWidget {
           children: [
             const _TextPageHeader(title: 'Правовая информация'),
             const SizedBox(height: 22),
-            for (var index = 0; index < _documents.length; index++) ...[
-              _LegalMenuTile(document: _documents[index]),
-              if (index != _documents.length - 1) const SizedBox(height: 12),
+            for (
+              var index = 0;
+              index < profileLegalDocuments.length;
+              index++
+            ) ...[
+              _LegalMenuTile(document: profileLegalDocuments[index]),
+              if (index != profileLegalDocuments.length - 1)
+                const SizedBox(height: 12),
             ],
           ],
         ),
@@ -547,10 +485,12 @@ class ProfileLegalPage extends StatelessWidget {
 class _ProfileLegalDocumentPage extends StatelessWidget {
   const _ProfileLegalDocumentPage({required this.document});
 
-  final _LegalDocument document;
+  final ProfileLegalDocumentContent document;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -562,12 +502,13 @@ class _ProfileLegalDocumentPage extends StatelessWidget {
             const SizedBox(height: 22),
             _AboutParagraph(document.subtitle),
             const SizedBox(height: 24),
-            for (var index = 0; index < document.paragraphs.length; index++)
-              _AboutNumberedBlock(
-                title: document.paragraphs[index].title,
-                body: document.paragraphs[index].body,
-                hasBottomGap: index != document.paragraphs.length - 1,
+            SelectableText(
+              document.body,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                height: 1.45,
               ),
+            ),
           ],
         ),
       ),
@@ -578,7 +519,7 @@ class _ProfileLegalDocumentPage extends StatelessWidget {
 class _LegalMenuTile extends StatelessWidget {
   const _LegalMenuTile({required this.document});
 
-  final _LegalDocument document;
+  final ProfileLegalDocumentContent document;
 
   @override
   Widget build(BuildContext context) {
@@ -631,25 +572,6 @@ class _LegalMenuTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _LegalDocument {
-  const _LegalDocument({
-    required this.title,
-    required this.subtitle,
-    required this.paragraphs,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<_LegalParagraph> paragraphs;
-}
-
-class _LegalParagraph {
-  const _LegalParagraph({required this.title, required this.body});
-
-  final String title;
-  final String body;
 }
 
 class _ProfileInfoScaffold extends StatelessWidget {

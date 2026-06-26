@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:klinomania/src/shared/helpers/phone_mask.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../profile/presentation/pages/profile_info_pages.dart';
 import '../controllers/auth_controller.dart';
 import 'cta_button.dart';
 
@@ -23,7 +25,8 @@ class PhoneStep extends StatefulWidget {
 class _PhoneStepState extends State<PhoneStep> {
   late final MaskTextInputFormatter _mask;
   late final TextEditingController _phoneController;
-  bool _isAgreementChecked = false;
+  bool _isPersonalDataConsentChecked = false;
+  bool _isOfferAcceptedChecked = false;
 
   @override
   void initState() {
@@ -47,7 +50,8 @@ class _PhoneStepState extends State<PhoneStep> {
     final controller = widget.controller;
     final String normalizedPhone = _normalizePhone(_phoneController.text);
     final bool isValid =
-        _isAgreementChecked &&
+        _isPersonalDataConsentChecked &&
+        _isOfferAcceptedChecked &&
         _isPhoneValid(normalizedPhone) &&
         !controller.isLoading;
     final bool hasFixedHeight =
@@ -75,43 +79,6 @@ class _PhoneStepState extends State<PhoneStep> {
           decoration: const InputDecoration(hintText: '+7'),
         ),
         const SizedBox(height: 18),
-        GestureDetector(
-          onTap: () {
-            widget.controller.clearError();
-            setState(() => _isAgreementChecked = !_isAgreementChecked);
-          },
-          child: Row(
-            children: [
-              Checkbox(
-                value: _isAgreementChecked,
-                onChanged: (value) {
-                  widget.controller.clearError();
-                  setState(() => _isAgreementChecked = value ?? false);
-                },
-              ),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    text: 'Я ознакомлен(а) и согласен(на) с ',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'условиями обработки персональных данных',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
         if (controller.errorMessage != null) ...[
           const SizedBox(height: 12),
           Text(
@@ -122,6 +89,46 @@ class _PhoneStepState extends State<PhoneStep> {
           ),
         ],
         if (hasFixedHeight) const Spacer() else const SizedBox(height: 24),
+        _AgreementCheckbox(
+          value: _isPersonalDataConsentChecked,
+          onChanged: (value) {
+            widget.controller.clearError();
+            setState(() => _isPersonalDataConsentChecked = value);
+          },
+          parts: const [
+            _AgreementTextPart(
+              'Я даю согласие на обработку персональных '
+              'данных в соответствии с ',
+            ),
+            _AgreementTextPart(
+              'Согласием на обработку персональных данных',
+              documentTitle: 'Согласие на обработку персональных данных',
+            ),
+            _AgreementTextPart(' и '),
+            _AgreementTextPart(
+              'Политикой в отношении обработки персональных данных',
+              documentTitle:
+                  'Политика в отношении обработки персональных данных',
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _AgreementCheckbox(
+          value: _isOfferAcceptedChecked,
+          onChanged: (value) {
+            widget.controller.clearError();
+            setState(() => _isOfferAcceptedChecked = value);
+          },
+          parts: const [
+            _AgreementTextPart('Принимаю условия '),
+            _AgreementTextPart(
+              'Публичной оферты',
+              documentTitle: 'Публичная оферта',
+            ),
+            _AgreementTextPart(' и подтверждаю оформление Заказа'),
+          ],
+        ),
+        const SizedBox(height: 18),
         CTAButton(
           label: 'Получить СМС с кодом',
           isLoading: controller.isLoading,
@@ -164,4 +171,100 @@ class _PhoneStepState extends State<PhoneStep> {
   bool _isPhoneValid(String phone) {
     return RegExp(r'^\+7\d{10}$').hasMatch(phone);
   }
+}
+
+class _AgreementCheckbox extends StatefulWidget {
+  const _AgreementCheckbox({
+    required this.value,
+    required this.onChanged,
+    required this.parts,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final List<_AgreementTextPart> parts;
+
+  @override
+  State<_AgreementCheckbox> createState() => _AgreementCheckboxState();
+}
+
+class _AgreementCheckboxState extends State<_AgreementCheckbox> {
+  late final List<TapGestureRecognizer?> _recognizers;
+
+  @override
+  void initState() {
+    super.initState();
+    _recognizers = [
+      for (final part in widget.parts)
+        part.documentTitle == null
+            ? null
+            : (TapGestureRecognizer()
+                ..onTap = () {
+                  ProfileLegalPage.openDocument(context, part.documentTitle!);
+                }),
+    ];
+  }
+
+  @override
+  void dispose() {
+    for (final recognizer in _recognizers) {
+      recognizer?.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall?.copyWith(
+      color: AppColors.textSecondary,
+      height: 1.35,
+    );
+    final linkStyle = textStyle?.copyWith(
+      color: AppColors.primary,
+      decoration: TextDecoration.underline,
+      decorationColor: AppColors.primary,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: Checkbox(
+            value: widget.value,
+            onChanged: (checked) => widget.onChanged(checked ?? false),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  for (var index = 0; index < widget.parts.length; index++)
+                    TextSpan(
+                      text: widget.parts[index].text,
+                      style: widget.parts[index].documentTitle == null
+                          ? textStyle
+                          : linkStyle,
+                      recognizer: _recognizers[index],
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AgreementTextPart {
+  const _AgreementTextPart(this.text, {this.documentTitle});
+
+  final String text;
+  final String? documentTitle;
 }

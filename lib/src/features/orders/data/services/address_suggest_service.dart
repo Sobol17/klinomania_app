@@ -5,7 +5,7 @@ import '../models/address_suggestion_model.dart';
 class AddressSuggestService {
   AddressSuggestService({
     Dio? dio,
-    String apiKey = const String.fromEnvironment('YANDEX_SUGGEST_API_KEY'),
+    String apiKey = '57f8dafe-0a08-4dc1-adcd-fa723496f369',
   }) : _dio = dio ?? Dio(_defaultOptions),
        _apiKey = apiKey;
 
