@@ -7,10 +7,7 @@
     {
       "name": "klinomania_app",
       "request": "launch",
-      "type": "dart",
-      "toolArgs": [
-        "--dart-define=YANDEX_SUGGEST_API_KEY=57f8dafe-0a08-4dc1-adcd-fa723496f369"
-      ]
+      "type": "dart"
     },
     {
       "name": "klinomania_app (profile mode)",

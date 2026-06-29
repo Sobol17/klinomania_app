@@ -40,7 +40,6 @@ class ProfileController extends ChangeNotifier {
   ];
 
   final List<ProfileMenuItem> supportMenuItems = const [
-    ProfileMenuItem(action: ProfileMenuAction.about, title: 'О нас'),
     ProfileMenuItem(action: ProfileMenuAction.contacts, title: 'Контакты'),
     ProfileMenuItem(
       action: ProfileMenuAction.legal,

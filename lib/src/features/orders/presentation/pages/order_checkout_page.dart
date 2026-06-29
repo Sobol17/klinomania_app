@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -150,6 +151,7 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                           timeFormatter: _timeMask,
                           timeInputHasError: _timeInputHasError,
                           onSelectDate: _pickDate,
+                          onSelectTime: _pickTime,
                           onTimeChanged: _handleTimeChanged,
                         ),
                         const SizedBox(height: 16),
@@ -360,6 +362,107 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     if (result != null) {
       setState(() => _date = result);
     }
+  }
+
+  Future<void> _pickTime() async {
+    FocusScope.of(context).unfocus();
+
+    final platform = Theme.of(context).platform;
+    final initialTime = _parseTime(_timeController.text) ?? _time;
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      final result = await _showCupertinoTimePicker(initialTime);
+      if (result == null || !mounted) {
+        return;
+      }
+      _setSelectedTime(result);
+      return;
+    }
+
+    final result = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+
+    _setSelectedTime(result);
+  }
+
+  Future<TimeOfDay?> _showCupertinoTimePicker(TimeOfDay initialTime) {
+    var selectedTime = initialTime;
+
+    return showCupertinoModalPopup<TimeOfDay>(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 320,
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Отмена'),
+                      ),
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        onPressed: () =>
+                            Navigator.of(context).pop(selectedTime),
+                        child: const Text('Готово'),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.time,
+                    use24hFormat: true,
+                    initialDateTime: DateTime(
+                      2020,
+                      1,
+                      1,
+                      initialTime.hour,
+                      initialTime.minute,
+                    ),
+                    onDateTimeChanged: (dateTime) {
+                      selectedTime = TimeOfDay(
+                        hour: dateTime.hour,
+                        minute: dateTime.minute,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _setSelectedTime(TimeOfDay time) {
+    _timeController.text = _formatTime(time);
+    setState(() {
+      _time = time;
+      _timeInputHasError = false;
+      if (_errorMessage == 'Укажите время в формате 00:00-23:59') {
+        _errorMessage = null;
+      }
+    });
   }
 
   void _handleTimeChanged(String value) {
@@ -653,6 +756,7 @@ class _DateTimeSection extends StatelessWidget {
     required this.timeFormatter,
     required this.timeInputHasError,
     required this.onSelectDate,
+    required this.onSelectTime,
     required this.onTimeChanged,
   });
 
@@ -661,6 +765,7 @@ class _DateTimeSection extends StatelessWidget {
   final TextInputFormatter timeFormatter;
   final bool timeInputHasError;
   final VoidCallback onSelectDate;
+  final VoidCallback onSelectTime;
   final ValueChanged<String> onTimeChanged;
 
   @override
@@ -690,6 +795,7 @@ class _DateTimeSection extends StatelessWidget {
                   controller: timeController,
                   inputFormatter: timeFormatter,
                   hasError: timeInputHasError,
+                  onSelectTime: onSelectTime,
                   onChanged: onTimeChanged,
                 ),
               ),
@@ -1282,12 +1388,14 @@ class _TimeInputField extends StatelessWidget {
     required this.controller,
     required this.inputFormatter,
     required this.hasError,
+    required this.onSelectTime,
     required this.onChanged,
   });
 
   final TextEditingController controller;
   final TextInputFormatter inputFormatter;
   final bool hasError;
+  final VoidCallback onSelectTime;
   final ValueChanged<String> onChanged;
 
   @override
@@ -1320,9 +1428,13 @@ class _TimeInputField extends StatelessWidget {
             color: hasError ? AppColors.danger : AppColors.primary,
           ),
         ),
-        suffixIcon: const Icon(
-          Icons.schedule_outlined,
-          color: AppColors.textSecondary,
+        suffixIcon: IconButton(
+          tooltip: 'Выбрать время',
+          onPressed: onSelectTime,
+          icon: const Icon(
+            Icons.schedule_outlined,
+            color: AppColors.textSecondary,
+          ),
         ),
       ),
     );

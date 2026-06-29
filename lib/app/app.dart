@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../src/core/storage/preferences_storage.dart';
@@ -133,6 +134,13 @@ class App extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Klinomania',
+        locale: const Locale('ru', 'RU'),
+        supportedLocales: const [Locale('ru', 'RU')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: AppTheme.lightTheme,
         home: const AuthPage(),
       ),

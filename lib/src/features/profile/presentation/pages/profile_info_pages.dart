@@ -40,149 +40,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 }
 
-class ProfileAboutPage extends StatelessWidget {
-  const ProfileAboutPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-          children: const [
-            _AboutHeader(),
-            SizedBox(height: 22),
-            _AboutParagraph(
-              'Клиномания — сервис бережного клининга для тех, кто любит ощущение свежести дома, но не хочет тратить время на бытовые заботы. Мы помогаем быстро выбрать подходящий тариф, добавить нужные опции и заказать уборку в удобное время.',
-            ),
-            SizedBox(height: 18),
-            _AboutParagraph(
-              'Наша цель — сделать чистоту привычной и спокойной частью жизни. Без лишних звонков, сложных согласований и случайного результата: только понятные условия, аккуратная работа и забота о деталях.',
-            ),
-            SizedBox(height: 22),
-            _AboutIntroTitle('Мы подходим и вам, если вам важны:'),
-            SizedBox(height: 12),
-            _AboutAccentParagraph(
-              title: 'ЭКСПЕРТНОСТЬ, ',
-              body:
-                  'когда вы понимаете, что дом требует внимательного ухода, правильных средств и аккуратной работы с поверхностями.',
-            ),
-            SizedBox(height: 12),
-            _AboutAccentParagraph(
-              title: 'СЕРВИС, ',
-              body:
-                  'когда вы хотите легко выбрать услугу, получить понятную стоимость и быть уверенными в результате.',
-            ),
-            SizedBox(height: 12),
-            _AboutAccentParagraph(
-              title: 'ЗАБОТА, ',
-              body:
-                  'когда важно, чтобы к вашему дому относились бережно, спокойно и без спешки.',
-            ),
-            SizedBox(height: 12),
-            _AboutAccentParagraph(
-              title: 'СЧАСТЬЕ, ',
-              body:
-                  'когда после уборки хочется просто открыть дверь, вдохнуть свежий воздух и отдыхать.',
-            ),
-            SizedBox(height: 24),
-            _AboutIntroTitle('Как нам это удается?'),
-            SizedBox(height: 16),
-            _AboutNumberedBlock(
-              title: '1. Понятные тарифы',
-              body:
-                  'В приложении собраны основные сценарии уборки: от базового поддержания чистоты до роскошного максимума с расширенным набором работ. Вы видите состав услуги заранее и выбираете только то, что нужно.',
-            ),
-            _AboutNumberedBlock(
-              title: '2. Аккуратная команда',
-              body:
-                  'Мы делаем ставку на внимательность, вежливость и стабильное качество. Клинеры работают по понятным чек-листам и уделяют внимание деталям, которые создают ощущение настоящей чистоты.',
-            ),
-            _AboutNumberedBlock(
-              title: '3. Удобное оформление',
-              body:
-                  'Вы выбираете размер квартиры, дополнительные опции, дату и время. Все важное находится в одном сценарии, поэтому заказ можно оформить без лишних действий.',
-            ),
-            _AboutNumberedBlock(
-              title: '4. Бережные средства',
-              body:
-                  'Мы используем профессиональный подход к поверхностям, текстилю, сантехнике и кухне. Для каждого типа загрязнения подбирается аккуратный и безопасный способ обработки.',
-            ),
-            _AboutNumberedBlock(
-              title: '5. Свежесть без визуального шума',
-              body:
-                  'После уборки дом должен выглядеть спокойно: чистые поверхности, свежий воздух, порядок на видимых местах и ощущение, что все подготовлено для отдыха.',
-            ),
-            _AboutNumberedBlock(
-              title: '6. Поддержка на связи',
-              body:
-                  'Если нужно уточнить детали, изменить заказ или передать комментарий клинеру, команда поможет разобраться и подскажет лучший вариант.',
-            ),
-            _AboutNumberedBlock(
-              title: '7. Ответственность за результат',
-              body:
-                  'Мы ценим доверие клиентов и внимательно относимся к обратной связи. Если возникнут вопросы по качеству, мы разберем ситуацию и найдем решение.',
-              hasBottomGap: false,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AboutHeader extends StatelessWidget {
-  const _AboutHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.of(context).maybePop(),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'О нас',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AboutIntroTitle extends StatelessWidget {
-  const _AboutIntroTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(
-      text,
-      style: theme.textTheme.bodyLarge?.copyWith(
-        color: AppColors.textPrimary,
-        height: 1.35,
-      ),
-    );
-  }
-}
-
-class _AboutParagraph extends StatelessWidget {
-  const _AboutParagraph(this.text);
+class _InfoParagraph extends StatelessWidget {
+  const _InfoParagraph(this.text);
 
   final String text;
 
@@ -194,75 +53,6 @@ class _AboutParagraph extends StatelessWidget {
       style: theme.textTheme.bodyLarge?.copyWith(
         color: AppColors.textPrimary,
         height: 1.34,
-      ),
-    );
-  }
-}
-
-class _AboutAccentParagraph extends StatelessWidget {
-  const _AboutAccentParagraph({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.bodyLarge?.copyWith(
-      color: AppColors.textPrimary,
-      height: 1.34,
-    );
-    return RichText(
-      text: TextSpan(
-        style: style,
-        children: [
-          TextSpan(
-            text: title,
-            style: style?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          TextSpan(text: body),
-        ],
-      ),
-    );
-  }
-}
-
-class _AboutNumberedBlock extends StatelessWidget {
-  const _AboutNumberedBlock({
-    required this.title,
-    required this.body,
-    this.hasBottomGap = true,
-  });
-
-  final String title;
-  final String body;
-  final bool hasBottomGap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: hasBottomGap ? 20 : 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            body,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.textPrimary,
-              height: 1.34,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -500,7 +290,7 @@ class _ProfileLegalDocumentPage extends StatelessWidget {
           children: [
             _TextPageHeader(title: document.title),
             const SizedBox(height: 22),
-            _AboutParagraph(document.subtitle),
+            _InfoParagraph(document.subtitle),
             const SizedBox(height: 24),
             SelectableText(
               document.body,

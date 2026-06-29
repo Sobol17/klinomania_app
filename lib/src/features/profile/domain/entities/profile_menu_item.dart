@@ -2,7 +2,6 @@ enum ProfileMenuAction {
   personalData,
   settings,
   history,
-  about,
   contacts,
   legal,
   logout,

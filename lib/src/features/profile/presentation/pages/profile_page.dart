@@ -343,11 +343,6 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
       case ProfileMenuAction.history:
         context.read<HomeController>().selectNavigationIndex(1);
         return;
-      case ProfileMenuAction.about:
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const ProfileAboutPage()),
-        );
-        return;
       case ProfileMenuAction.contacts:
         Navigator.of(context).push(
           MaterialPageRoute<void>(builder: (_) => const ProfileContactsPage()),
@@ -542,7 +537,6 @@ class _ProfileMenuRow extends StatelessWidget {
       case ProfileMenuAction.personalData:
       case ProfileMenuAction.settings:
       case ProfileMenuAction.history:
-      case ProfileMenuAction.about:
       case ProfileMenuAction.contacts:
       case ProfileMenuAction.legal:
         return true;
