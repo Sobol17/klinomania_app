@@ -6,29 +6,18 @@ import '../../domain/entities/profile_menu_item.dart';
 import '../../domain/repositories/profile_repository.dart';
 
 class ProfileController extends ChangeNotifier {
-  ProfileController({required this.repository, this.useApi = true}) {
-    if (!useApi) {
-      _profile = _mockProfile;
-    }
-  }
+  ProfileController({required this.repository});
 
   final ProfileRepository repository;
-  final bool useApi;
 
   ClientProfile? _profile;
   bool _isLoading = false;
   bool _isSaving = false;
   bool _hasLoaded = false;
+  UserRole? _role;
+  String? _sessionKey;
   String? _loadError;
   String? _updateError;
-
-  bool _prefersSlavicStaff = true;
-
-  static const ProfileMenuItem _deleteMenuItem = ProfileMenuItem(
-    action: ProfileMenuAction.delete,
-    title: 'Удалить профиль',
-    isDestructive: true,
-  );
 
   final List<ProfileMenuItem> primaryMenuItems = const [
     ProfileMenuItem(
@@ -52,41 +41,41 @@ class ProfileController extends ChangeNotifier {
     ),
   ];
 
-  List<ProfileMenuItem> get menuItems => [
-    ...primaryMenuItems,
-    ...supportMenuItems,
-    _deleteMenuItem,
-  ];
-
-  ProfileMenuItem get deleteMenuItem => _deleteMenuItem;
-
-  bool get prefersSlavicStaff => _prefersSlavicStaff;
   ClientProfile? get profile => _profile;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   String? get loadError => _loadError;
   String? get updateError => _updateError;
 
-  void ensureLoaded() {
+  void ensureLoaded({required UserRole role, required String sessionKey}) {
+    if (sessionKey.isEmpty) {
+      return;
+    }
+
+    if (_role != role || _sessionKey != sessionKey) {
+      _role = role;
+      _sessionKey = sessionKey;
+      _profile = null;
+      _hasLoaded = false;
+      _loadError = null;
+    }
+
     if (_hasLoaded || _isLoading) {
       return;
     }
     _hasLoaded = true;
-    loadProfile();
+    loadProfile(role);
   }
 
-  Future<void> loadProfile() async {
+  Future<void> loadProfile(UserRole role) async {
     if (_isLoading) return;
+    _role = role;
     _isLoading = true;
     _loadError = null;
     notifyListeners();
 
     try {
-      if (useApi) {
-        _profile = await repository.fetchProfile();
-      } else {
-        _profile = _mockProfile;
-      }
+      _profile = await repository.fetchProfile(role);
     } catch (error) {
       _loadError = _mapError(error);
     } finally {
@@ -99,36 +88,34 @@ class ProfileController extends ChangeNotifier {
     String? name,
     String? email,
     String? address,
-    String? description,
+    bool? pushNotificationsEnabled,
+    bool? emailMarketingEnabled,
   }) async {
     if (_isSaving) return false;
+    final profile = _profile;
+    if (profile == null) {
+      _updateError = 'Профиль еще не загружен';
+      notifyListeners();
+      return false;
+    }
+    if (profile.role != UserRole.client) {
+      _updateError = 'Редактирование профиля клинера недоступно';
+      notifyListeners();
+      return false;
+    }
+
     _updateError = null;
     _isSaving = true;
     notifyListeners();
 
     try {
-      if (useApi) {
-        _profile = await repository.updateProfile(
-          name: name,
-          email: email,
-          address: address,
-          description: description,
-        );
-      } else {
-        final current = _profile ?? _mockProfile;
-        _profile = ClientProfile(
-          id: current.id,
-          name: name ?? current.name,
-          phone: current.phone,
-          email: email ?? current.email,
-          dateOfBirth: current.dateOfBirth,
-          role: current.role,
-          address: address ?? current.address,
-          description: description ?? current.description,
-          createdAt: current.createdAt,
-          updatedAt: DateTime.now(),
-        );
-      }
+      _profile = await repository.updateProfile(
+        name: name,
+        email: email,
+        address: address,
+        pushNotificationsEnabled: pushNotificationsEnabled,
+        emailMarketingEnabled: emailMarketingEnabled,
+      );
       return true;
     } catch (error) {
       _updateError = _mapError(error);
@@ -146,14 +133,6 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
-  void onMenuItemSelected(ProfileMenuAction action) {}
-
-  void setSlavicStaffPreference(bool value) {
-    if (_prefersSlavicStaff == value) return;
-    _prefersSlavicStaff = value;
-    notifyListeners();
-  }
-
   static String _mapError(Object error) {
     if (error is StateError && error.message.isNotEmpty) {
       return error.message;
@@ -161,18 +140,4 @@ class ProfileController extends ChangeNotifier {
 
     return 'Что-то пошло не так. Попробуйте снова';
   }
-
-  static final ClientProfile _mockProfile = ClientProfile(
-    id: 'mock-client',
-    name: '',
-    phone: '+7 998 12-632-31',
-    email: '',
-    dateOfBirth: null,
-    role: UserRole.client,
-    address: '',
-    description:
-        'Аккуратный и ответственный клинер. Быстро и качественно наведу порядок в любых помещениях.',
-    createdAt: null,
-    updatedAt: null,
-  );
 }

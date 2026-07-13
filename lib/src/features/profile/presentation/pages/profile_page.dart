@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/widgets/home_background.dart';
-import '../../domain/entities/profile_info_field.dart';
 import '../../domain/entities/profile_menu_item.dart';
 import '../controllers/profile_controller.dart';
 import 'profile_edit_page.dart';
@@ -44,6 +42,7 @@ class ProfilePage extends StatelessWidget {
             builder: (context, controller, _) {
               return _CleanerProfileView(
                 controller: controller,
+                sessionKey: auth.session?.accessToken ?? '',
                 onLogout: auth.logout,
               );
             },
@@ -53,6 +52,7 @@ class ProfilePage extends StatelessWidget {
           builder: (context, controller, _) {
             return _ClientProfileView(
               controller: controller,
+              sessionKey: auth.session?.accessToken ?? '',
               onLogout: auth.logout,
             );
           },
@@ -62,182 +62,15 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
-void _showEditFieldSheet(
-  BuildContext context,
-  ProfileController controller,
-  ProfileInfoField field,
-) {
-  controller.clearUpdateError();
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppStyle.cardRadius),
-      ),
-    ),
-    builder: (_) => _EditProfileFieldSheet(field: field),
-  );
-}
-
-class _EditProfileFieldSheet extends StatefulWidget {
-  const _EditProfileFieldSheet({required this.field});
-
-  final ProfileInfoField field;
-
-  @override
-  State<_EditProfileFieldSheet> createState() => _EditProfileFieldSheetState();
-}
-
-class _EditProfileFieldSheetState extends State<_EditProfileFieldSheet> {
-  TextEditingController? _textController;
-
-  bool get _isDescription =>
-      widget.field.type == ProfileInfoFieldType.description;
-
-  @override
-  void initState() {
-    super.initState();
-    final normalized = _normalizeValue(widget.field.value);
-    _textController = TextEditingController(text: normalized);
-  }
-
-  @override
-  void dispose() {
-    _textController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        16 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Consumer<ProfileController>(
-        builder: (context, controller, _) {
-          final isSaving = controller.isSaving;
-          final canSubmit = _canSubmit && !isSaving;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Редактировать ${widget.field.label.toLowerCase()}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _textController,
-                keyboardType: _isDescription
-                    ? TextInputType.multiline
-                    : _keyboardTypeFor(widget.field.type),
-                textInputAction: _isDescription
-                    ? TextInputAction.newline
-                    : TextInputAction.done,
-                minLines: _isDescription ? 4 : 1,
-                maxLines: _isDescription ? 6 : 1,
-                decoration: InputDecoration(labelText: widget.field.label),
-                onChanged: (_) {
-                  controller.clearUpdateError();
-                  setState(() {});
-                },
-              ),
-              if (controller.updateError != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  controller.updateError!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.danger,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              CTAButton(
-                label: 'Сохранить',
-                isLoading: isSaving,
-                onPressed: canSubmit
-                    ? () async {
-                        final success = await controller.updateProfile(
-                          name: widget.field.type == ProfileInfoFieldType.name
-                              ? _currentValue
-                              : null,
-                          email: widget.field.type == ProfileInfoFieldType.email
-                              ? _currentValue
-                              : null,
-                          address:
-                              widget.field.type == ProfileInfoFieldType.address
-                              ? _currentValue
-                              : null,
-                          description:
-                              widget.field.type ==
-                                  ProfileInfoFieldType.description
-                              ? _currentValue
-                              : null,
-                        );
-                        if (!mounted) return;
-                        if (!context.mounted) return;
-                        if (success) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    : null,
-              ),
-              const SizedBox(height: 8),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  bool get _canSubmit {
-    final value = _currentValue.trim();
-    return value.isNotEmpty;
-  }
-
-  String get _currentValue {
-    return _textController?.text ?? '';
-  }
-
-  static String _normalizeValue(String value) {
-    if (value == '-') {
-      return '';
-    }
-    return value;
-  }
-
-  static TextInputType _keyboardTypeFor(ProfileInfoFieldType type) {
-    switch (type) {
-      case ProfileInfoFieldType.email:
-        return TextInputType.emailAddress;
-      default:
-        return TextInputType.text;
-    }
-  }
-}
-
 class _ClientProfileView extends StatefulWidget {
-  const _ClientProfileView({required this.controller, required this.onLogout});
+  const _ClientProfileView({
+    required this.controller,
+    required this.sessionKey,
+    required this.onLogout,
+  });
 
   final ProfileController controller;
+  final String sessionKey;
   final VoidCallback onLogout;
 
   @override
@@ -249,16 +82,23 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.controller.ensureLoaded();
+      widget.controller.ensureLoaded(
+        role: UserRole.client,
+        sessionKey: widget.sessionKey,
+      );
     });
   }
 
   @override
   void didUpdateWidget(covariant _ClientProfileView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.sessionKey != widget.sessionKey) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.controller.ensureLoaded();
+        widget.controller.ensureLoaded(
+          role: UserRole.client,
+          sessionKey: widget.sessionKey,
+        );
       });
     }
   }
@@ -307,12 +147,6 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
                   items: controller.supportMenuItems,
                   onItemTap: (item) => _handleMenuItem(context, item),
                 ),
-                const SizedBox(height: 16),
-                _ProfileDangerSection(
-                  item: controller.deleteMenuItem,
-                  onTap: () =>
-                      _handleMenuItem(context, controller.deleteMenuItem),
-                ),
               ],
             ),
           ),
@@ -355,9 +189,6 @@ class _ClientProfileViewState extends State<_ClientProfileView> {
         return;
       case ProfileMenuAction.logout:
         widget.onLogout();
-        return;
-      case ProfileMenuAction.delete:
-        widget.controller.onMenuItemSelected(item.action);
         return;
     }
   }
@@ -541,33 +372,20 @@ class _ProfileMenuRow extends StatelessWidget {
       case ProfileMenuAction.legal:
         return true;
       case ProfileMenuAction.logout:
-      case ProfileMenuAction.delete:
         return false;
     }
   }
 }
 
-class _ProfileDangerSection extends StatelessWidget {
-  const _ProfileDangerSection({required this.item, required this.onTap});
-
-  final ProfileMenuItem item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: _profileSectionDecoration(),
-      child: _ProfileMenuRow(item: item, onTap: onTap),
-    );
-  }
-}
-
 class _CleanerProfileView extends StatefulWidget {
-  const _CleanerProfileView({required this.controller, required this.onLogout});
+  const _CleanerProfileView({
+    required this.controller,
+    required this.sessionKey,
+    required this.onLogout,
+  });
 
   final ProfileController controller;
+  final String sessionKey;
   final VoidCallback onLogout;
 
   @override
@@ -579,16 +397,23 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.controller.ensureLoaded();
+      widget.controller.ensureLoaded(
+        role: UserRole.cleaner,
+        sessionKey: widget.sessionKey,
+      );
     });
   }
 
   @override
   void didUpdateWidget(covariant _CleanerProfileView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.sessionKey != widget.sessionKey) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.controller.ensureLoaded();
+        widget.controller.ensureLoaded(
+          role: UserRole.cleaner,
+          sessionKey: widget.sessionKey,
+        );
       });
     }
   }
@@ -598,9 +423,9 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
     final theme = Theme.of(context);
     final profile = widget.controller.profile;
     final name = _valueOrDefault(profile?.name, 'Профиль');
-    final description = _valueOrDash(profile?.description);
     final phone = _valueOrDash(profile?.phone);
     final email = _valueOrDash(profile?.email);
+    final status = _statusLabel(profile?.isActive);
 
     return Stack(
       children: [
@@ -637,27 +462,9 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
                   children: [
                     _CleanerInfoTile(label: 'Имя', value: name),
                     const SizedBox(height: 12),
-                    _CleanerInfoTile(
-                      label: 'Опыт работы',
-                      value: description,
-                      showEditIcon: true,
-                      onTap: () => _showEditFieldSheet(
-                        context,
-                        widget.controller,
-                        ProfileInfoField(
-                          type: ProfileInfoFieldType.description,
-                          label: 'Опыт работы',
-                          value: description,
-                          isEditable: true,
-                        ),
-                      ),
-                    ),
+                    _CleanerInfoTile(label: 'Статус', value: status),
                     const SizedBox(height: 12),
-                    _CleanerInfoTile(
-                      label: 'Номер телефона',
-                      value: phone,
-                      showEditIcon: false,
-                    ),
+                    _CleanerInfoTile(label: 'Номер телефона', value: phone),
                     const SizedBox(height: 12),
                     _CleanerInfoTile(label: 'Эл. почта', value: email),
                   ],
@@ -668,13 +475,6 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
                   label: 'Выйти',
                   onTap: widget.onLogout,
                   isDestructive: true,
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'Удалить профиль',
-                    style: TextStyle(color: AppColors.danger),
-                  ),
                 ),
               ],
             ),
@@ -697,60 +497,51 @@ class _CleanerProfileViewState extends State<_CleanerProfileView> {
     }
     return value;
   }
+
+  String _statusLabel(bool? isActive) {
+    if (isActive == null) {
+      return '-';
+    }
+    return isActive ? 'Активен' : 'Не активен';
+  }
 }
 
 class _CleanerInfoTile extends StatelessWidget {
-  const _CleanerInfoTile({
-    required this.label,
-    required this.value,
-    this.showEditIcon = false,
-    this.onTap,
-  });
+  const _CleanerInfoTile({required this.label, required this.value});
 
   final String label;
   final String value;
-  final bool showEditIcon;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: _profileBlockDecoration(),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: _profileBlockDecoration(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            if (showEditIcon)
-              const Icon(
-                Icons.edit_outlined,
-                color: AppColors.primary,
-                size: 20,
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

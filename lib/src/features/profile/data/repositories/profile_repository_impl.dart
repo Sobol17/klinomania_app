@@ -1,3 +1,4 @@
+import '../../../auth/domain/entities/auth_session.dart';
 import '../../domain/entities/client_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
@@ -8,8 +9,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
 
   @override
-  Future<ClientProfile> fetchProfile() async {
-    final profile = await remoteDataSource.fetchProfile();
+  Future<ClientProfile> fetchProfile(UserRole role) async {
+    final profile = await remoteDataSource.fetchProfile(role);
     return profile.toEntity();
   }
 
@@ -18,13 +19,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String? name,
     String? email,
     String? address,
-    String? description,
+    bool? pushNotificationsEnabled,
+    bool? emailMarketingEnabled,
   }) async {
-    final profile = await remoteDataSource.updateProfile(
+    final profile = await remoteDataSource.updateClientProfile(
       name: name,
       email: email,
       address: address,
-      description: description,
+      pushNotificationsEnabled: pushNotificationsEnabled,
+      emailMarketingEnabled: emailMarketingEnabled,
     );
     return profile.toEntity();
   }

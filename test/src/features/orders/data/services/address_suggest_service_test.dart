@@ -47,10 +47,7 @@ void main() {
       expect(suggestions.single.address, 'Иркутск, улица Ленина, 1');
       expect(adapter.requestCount, 1);
       expect(adapter.lastOptions?.path, '/v1/suggest');
-      expect(
-        adapter.lastOptions?.queryParameters['text'],
-        'Москва, Ленина 1',
-      );
+      expect(adapter.lastOptions?.queryParameters['text'], 'Москва, Ленина 1');
     });
   });
 }

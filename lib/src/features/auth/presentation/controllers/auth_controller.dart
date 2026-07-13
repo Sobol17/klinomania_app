@@ -167,7 +167,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> submitCleanerCredentials({
     required String phone,
-    required String password,
+    required String code,
   }) async {
     _phoneNumber = phone;
     _role = UserRole.cleaner;
@@ -178,10 +178,7 @@ class AuthController extends ChangeNotifier {
     try {
       AuthSession session;
       if (useApi) {
-        session = await repository.loginCleaner(
-          phoneNumber: phone,
-          password: password,
-        );
+        session = await repository.loginCleaner(phoneNumber: phone, code: code);
       } else {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         session = AuthSession(

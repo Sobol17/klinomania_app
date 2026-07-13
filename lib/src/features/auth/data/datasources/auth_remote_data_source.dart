@@ -1,51 +1,67 @@
-import '../../domain/entities/auth_session.dart';
+import 'package:dio/dio.dart';
+
+import '../../../../core/network/api_error_mapper.dart';
+import '../../../../core/network/api_client.dart';
 import '../models/auth_session_model.dart';
 
 class AuthRemoteDataSource {
-  AuthRemoteDataSource();
+  AuthRemoteDataSource({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  String _lastRole = 'client';
+  final ApiClient _apiClient;
 
   Future<void> requestOtp(String phoneNumber, String role) async {
-    _lastRole = role;
-    await _mockDelay();
+    try {
+      await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/client/auth/request-code',
+        data: {'phone': phoneNumber},
+      );
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 
   Future<void> requestOtpSms(String phoneNumber) async {
-    await _mockDelay();
+    await requestOtp(phoneNumber, 'client');
   }
 
   Future<AuthSessionModel> verifyOtp(String phoneNumber, String code) async {
-    await _mockDelay();
-    return AuthSessionModel(
-      accessToken: 'mock-token-${DateTime.now().millisecondsSinceEpoch}',
-      tokenType: 'Bearer',
-      phoneNumber: phoneNumber,
-      isNewUser: true,
-      role: UserRoleSerializer.fromJson(_lastRole),
-    );
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/client/auth/verify-code',
+        data: {'phone': phoneNumber, 'code': code},
+      );
+
+      return AuthSessionModel.fromJson(_responseData(response.data));
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 
   Future<AuthSessionModel> loginCleaner({
     required String phoneNumber,
-    required String password,
+    required String code,
   }) async {
-    await _mockDelay();
-    if (password.isEmpty) {
-      throw StateError('Введите пароль');
-    }
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/cleaner/auth/login',
+        data: {'phone': phoneNumber, 'code': code},
+      );
 
-    return AuthSessionModel(
-      accessToken:
-          'mock-cleaner-token-${DateTime.now().millisecondsSinceEpoch}',
-      tokenType: 'Bearer',
-      phoneNumber: phoneNumber,
-      isNewUser: false,
-      role: UserRole.cleaner,
-    );
+      return AuthSessionModel.fromJson(_responseData(response.data));
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 
-  Future<void> _mockDelay() {
-    return Future<void>.delayed(const Duration(milliseconds: 250));
+  void setAuthToken(String? token, {String tokenType = 'Bearer'}) {
+    _apiClient.setAuthToken(token, tokenType: tokenType);
+  }
+
+  Map<String, dynamic> _responseData(Map<String, dynamic>? data) {
+    if (data == null) {
+      throw StateError('Пустой ответ сервера');
+    }
+
+    return data;
   }
 }

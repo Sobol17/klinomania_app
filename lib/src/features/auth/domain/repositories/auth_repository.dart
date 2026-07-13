@@ -6,7 +6,7 @@ abstract class AuthRepository {
   Future<AuthSession> verifyOtp(String phoneNumber, String code);
   Future<AuthSession> loginCleaner({
     required String phoneNumber,
-    required String password,
+    required String code,
   });
   Future<AuthSession?> restoreSession();
   Future<void> saveSession(AuthSession session);

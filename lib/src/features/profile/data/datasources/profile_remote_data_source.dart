@@ -1,50 +1,71 @@
+import 'package:dio/dio.dart';
+
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_error_mapper.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../models/client_profile_model.dart';
 
 class ProfileRemoteDataSource {
-  ProfileRemoteDataSource();
+  ProfileRemoteDataSource({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
-  ClientProfileModel _profile = ClientProfileModel(
-    id: 'client-1',
-    name: '',
-    phone: '+7 999 123-45-67',
-    email: '',
-    dateOfBirth: DateTime(1993, 5, 18),
-    role: UserRole.client,
-    address: '',
-    description: '',
-    createdAt: DateTime(2026, 1),
-    updatedAt: DateTime(2026, 2),
-  );
+  final ApiClient _apiClient;
 
-  Future<ClientProfileModel> fetchProfile() async {
-    await _mockDelay();
-    return _profile;
+  Future<ClientProfileModel> fetchProfile(UserRole role) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        _profilePath(role),
+      );
+
+      return ClientProfileModel.fromJson(_responseData(response.data));
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 
-  Future<ClientProfileModel> updateProfile({
+  Future<ClientProfileModel> updateClientProfile({
     String? name,
     String? email,
     String? address,
-    String? description,
+    bool? pushNotificationsEnabled,
+    bool? emailMarketingEnabled,
   }) async {
-    await _mockDelay();
-    _profile = ClientProfileModel(
-      id: _profile.id,
-      name: name ?? _profile.name,
-      phone: _profile.phone,
-      email: email ?? _profile.email,
-      dateOfBirth: _profile.dateOfBirth,
-      role: _profile.role,
-      address: address ?? _profile.address,
-      description: description ?? _profile.description,
-      createdAt: _profile.createdAt,
-      updatedAt: DateTime.now(),
-    );
-    return _profile;
+    final data = <String, dynamic>{
+      if (name != null) 'name': name,
+      if (email != null) 'email': email,
+      if (address != null) 'address': address,
+      if (pushNotificationsEnabled != null)
+        'push_notifications_enabled': pushNotificationsEnabled,
+      if (emailMarketingEnabled != null)
+        'email_marketing_enabled': emailMarketingEnabled,
+    };
+
+    try {
+      final response = await _apiClient.patch<Map<String, dynamic>>(
+        '/api/v1/client/profile',
+        data: data,
+      );
+
+      return ClientProfileModel.fromJson(_responseData(response.data));
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 
-  Future<void> _mockDelay() {
-    return Future<void>.delayed(const Duration(milliseconds: 250));
+  String _profilePath(UserRole role) {
+    switch (role) {
+      case UserRole.cleaner:
+        return '/api/v1/cleaner/profile';
+      case UserRole.client:
+        return '/api/v1/client/profile';
+    }
+  }
+
+  Map<String, dynamic> _responseData(Map<String, dynamic>? data) {
+    if (data == null) {
+      throw StateError('Пустой ответ сервера');
+    }
+
+    return data;
   }
 }

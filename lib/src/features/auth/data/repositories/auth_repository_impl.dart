@@ -35,11 +35,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthSession> loginCleaner({
     required String phoneNumber,
-    required String password,
+    required String code,
   }) async {
     final session = await remoteDataSource.loginCleaner(
       phoneNumber: phoneNumber,
-      password: password,
+      code: code,
     );
     return session.toEntity();
   }
@@ -47,17 +47,31 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthSession?> restoreSession() async {
     final session = await localDataSource.loadSession();
-    return session?.toEntity();
+    if (session == null) {
+      remoteDataSource.setAuthToken(null);
+      return null;
+    }
+
+    remoteDataSource.setAuthToken(
+      session.accessToken,
+      tokenType: session.tokenType,
+    );
+    return session.toEntity();
   }
 
   @override
   Future<void> saveSession(AuthSession session) {
     final model = AuthSessionModel.fromEntity(session);
+    remoteDataSource.setAuthToken(
+      model.accessToken,
+      tokenType: model.tokenType,
+    );
     return localDataSource.saveSession(model);
   }
 
   @override
   Future<void> clearSession() {
+    remoteDataSource.setAuthToken(null);
     return localDataSource.clearSession();
   }
 }

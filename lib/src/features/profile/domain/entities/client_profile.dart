@@ -8,24 +8,22 @@ class ClientProfile extends Equatable {
     required this.name,
     required this.phone,
     required this.email,
-    required this.dateOfBirth,
     required this.role,
     required this.address,
-    required this.description,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.pushNotificationsEnabled,
+    required this.emailMarketingEnabled,
+    required this.isActive,
   });
 
   final String id;
   final String name;
   final String phone;
   final String email;
-  final DateTime? dateOfBirth;
   final UserRole role;
   final String address;
-  final String description;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final bool pushNotificationsEnabled;
+  final bool emailMarketingEnabled;
+  final bool? isActive;
 
   @override
   List<Object?> get props => [
@@ -33,11 +31,10 @@ class ClientProfile extends Equatable {
     name,
     phone,
     email,
-    dateOfBirth,
     role,
     address,
-    description,
-    createdAt,
-    updatedAt,
+    pushNotificationsEnabled,
+    emailMarketingEnabled,
+    isActive,
   ];
 }

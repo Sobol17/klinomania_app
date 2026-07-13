@@ -153,14 +153,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     );
   }
 
-  void _changeArea(double delta) {
-    final config = _activeConfig;
-    setState(() {
-      final next = (_area + delta).clamp(config.minArea, config.maxArea);
-      _area = next;
-    });
-  }
-
   void _handleRoomSelection(String id) {
     final config = _activeConfig;
     final addOns = config.cleaningOptions ?? const <ServiceCleaningOption>[];
@@ -899,59 +891,6 @@ class _SelectionIndicator extends StatelessWidget {
       child: checkbox && active
           ? const Icon(Icons.check, color: AppColors.white, size: 14)
           : null,
-    );
-  }
-}
-
-class _AreaStepper extends StatelessWidget {
-  const _AreaStepper({
-    required this.area,
-    required this.step,
-    required this.onChanged,
-  });
-
-  final double area;
-  final double step;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = Theme.of(
-      context,
-    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _RoundIconButton(icon: Icons.remove, onTap: () => onChanged(-step)),
-        const SizedBox(width: 12),
-        Text('${area.round()} м²', style: textStyle),
-        const SizedBox(width: 12),
-        _RoundIconButton(icon: Icons.add, onTap: () => onChanged(step)),
-      ],
-    );
-  }
-}
-
-class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(icon, size: 20, color: AppColors.textPrimary),
-      ),
     );
   }
 }

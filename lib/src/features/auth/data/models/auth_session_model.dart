@@ -18,10 +18,14 @@ class AuthSessionModel {
   final UserRole role;
 
   factory AuthSessionModel.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] is Map
+        ? Map<String, dynamic>.from(json['user'] as Map)
+        : const <String, dynamic>{};
     final dynamic roleValue =
-        json['role'] ?? json['user_role'] ?? json['userRole'];
+        json['role'] ?? json['user_role'] ?? json['userRole'] ?? user['role'];
     return AuthSessionModel(
       accessToken:
+          json['token'] as String? ??
           json['access_token'] as String? ??
           json['accessToken'] as String? ??
           '',
@@ -30,6 +34,8 @@ class AuthSessionModel {
           json['tokenType'] as String? ??
           'Bearer',
       phoneNumber:
+          user['phone'] as String? ??
+          json['phone'] as String? ??
           json['phone_number'] as String? ??
           json['phoneNumber'] as String? ??
           '',

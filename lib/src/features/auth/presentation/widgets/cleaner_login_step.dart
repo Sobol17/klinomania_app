@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:klinomania/src/shared/helpers/phone_mask.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -23,8 +24,7 @@ class CleanerLoginStep extends StatefulWidget {
 class _CleanerLoginStepState extends State<CleanerLoginStep> {
   late final MaskTextInputFormatter _mask;
   late final TextEditingController _phoneController;
-  late final TextEditingController _passwordController;
-  bool _isPasswordHidden = true;
+  late final TextEditingController _codeController;
 
   @override
   void initState() {
@@ -34,13 +34,13 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
       type: phoneMask.type,
     );
     _phoneController = TextEditingController();
-    _passwordController = TextEditingController();
+    _codeController = TextEditingController();
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
@@ -51,7 +51,7 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
     final normalizedPhone = _normalizePhone(_phoneController.text);
     final isValid =
         _isPhoneValid(normalizedPhone) &&
-        _passwordController.text.trim().isNotEmpty &&
+        _isCodeValid(_codeController.text) &&
         !controller.isLoading;
     final hasFixedHeight =
         widget.viewportHeight.isFinite && widget.viewportHeight > 0;
@@ -68,7 +68,7 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Введите номер телефона и пароль',
+          'Введите номер телефона и 6-значный код',
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
@@ -91,8 +91,12 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
         ),
         const SizedBox(height: 12),
         TextField(
-          controller: _passwordController,
-          obscureText: _isPasswordHidden,
+          controller: _codeController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
+          ],
           textInputAction: TextInputAction.done,
           onChanged: (_) {
             controller.clearError();
@@ -103,19 +107,9 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
               _submit(normalizedPhone);
             }
           },
-          decoration: InputDecoration(
-            labelText: 'Пароль',
-            suffixIcon: IconButton(
-              onPressed: () {
-                setState(() => _isPasswordHidden = !_isPasswordHidden);
-              },
-              icon: Icon(
-                _isPasswordHidden
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: AppColors.textSecondary,
-              ),
-            ),
+          decoration: const InputDecoration(
+            labelText: 'Код',
+            hintText: '000000',
           ),
         ),
         if (controller.errorMessage != null) ...[
@@ -147,7 +141,7 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
   void _submit(String normalizedPhone) {
     widget.controller.submitCleanerCredentials(
       phone: normalizedPhone,
-      password: _passwordController.text,
+      code: _codeController.text,
     );
   }
 
@@ -174,5 +168,9 @@ class _CleanerLoginStepState extends State<CleanerLoginStep> {
 
   bool _isPhoneValid(String phone) {
     return RegExp(r'^\+7\d{10}$').hasMatch(phone);
+  }
+
+  bool _isCodeValid(String code) {
+    return RegExp(r'^\d{6}$').hasMatch(code);
   }
 }

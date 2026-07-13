@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import '../src/core/network/api_client.dart';
 import '../src/core/storage/preferences_storage.dart';
 import '../src/core/theme/app_theme.dart';
 import '../src/features/auth/data/datasources/auth_local_data_source.dart';
@@ -41,25 +42,32 @@ class App extends StatelessWidget {
     super.key,
     required this.preferencesStorage,
     required this.useApi,
+    required this.apiBaseUrl,
   });
 
   final PreferencesStorage preferencesStorage;
   final bool useApi;
+  final String apiBaseUrl;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<PreferencesStorage>.value(value: preferencesStorage),
+        Provider<ApiClient>(create: (_) => ApiClient(baseUrl: apiBaseUrl)),
         Provider<AuthRepository>(
-          create: (_) => AuthRepositoryImpl(
-            remoteDataSource: AuthRemoteDataSource(),
+          create: (context) => AuthRepositoryImpl(
+            remoteDataSource: AuthRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
             localDataSource: AuthLocalDataSource(preferencesStorage),
           ),
         ),
         Provider<ProfileRepository>(
-          create: (_) => ProfileRepositoryImpl(
-            remoteDataSource: ProfileRemoteDataSource(),
+          create: (context) => ProfileRepositoryImpl(
+            remoteDataSource: ProfileRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         Provider<ServicesRepository>(
@@ -119,10 +127,8 @@ class App extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider<ProfileController>(
-          create: (context) => ProfileController(
-            repository: context.read<ProfileRepository>(),
-            useApi: useApi,
-          ),
+          create: (context) =>
+              ProfileController(repository: context.read<ProfileRepository>()),
         ),
         ChangeNotifierProvider<ServicesController>(
           create: (context) => ServicesController(

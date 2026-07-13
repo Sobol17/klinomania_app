@@ -1,41 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_back_button.dart';
+import '../controllers/profile_controller.dart';
 import 'profile_legal_documents.dart';
 
-class ProfileSettingsPage extends StatefulWidget {
+class ProfileSettingsPage extends StatelessWidget {
   const ProfileSettingsPage({super.key});
 
   @override
-  State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
-}
-
-class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
-  bool _pushEnabled = true;
-  bool _emailEnabled = false;
-
-  @override
   Widget build(BuildContext context) {
-    return _ProfileInfoScaffold(
-      title: 'Настройки',
-      subtitle:
-          'Отключение PUSH уведомлений может повлиять на работу приложения',
-      children: [
-        _SettingsSwitchTile(
-          title: 'Push-уведомления',
-          description: 'Напомним о заказах, статусах и важных изменениях.',
-          value: _pushEnabled,
-          onChanged: (value) => setState(() => _pushEnabled = value),
-        ),
-        const SizedBox(height: 12),
-        _SettingsSwitchTile(
-          title: 'Email-уведомления',
-          description: 'Отправим чеки, подтверждения и спокойные напоминания.',
-          value: _emailEnabled,
-          onChanged: (value) => setState(() => _emailEnabled = value),
-        ),
-      ],
+    return Consumer<ProfileController>(
+      builder: (context, controller, _) {
+        final profile = controller.profile;
+        return _ProfileInfoScaffold(
+          title: 'Настройки',
+          subtitle:
+              'Отключение PUSH уведомлений может повлиять на работу приложения',
+          children: [
+            _SettingsSwitchTile(
+              title: 'Push-уведомления',
+              description: 'Напомним о заказах, статусах и важных изменениях.',
+              value: profile?.pushNotificationsEnabled ?? false,
+              onChanged: profile == null || controller.isSaving
+                  ? null
+                  : (value) => controller.updateProfile(
+                      pushNotificationsEnabled: value,
+                    ),
+            ),
+            const SizedBox(height: 12),
+            _SettingsSwitchTile(
+              title: 'Email-уведомления',
+              description:
+                  'Отправим чеки, подтверждения и спокойные напоминания.',
+              value: profile?.emailMarketingEnabled ?? false,
+              onChanged: profile == null || controller.isSaving
+                  ? null
+                  : (value) =>
+                        controller.updateProfile(emailMarketingEnabled: value),
+            ),
+            if (controller.updateError != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                controller.updateError!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.danger),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -468,7 +484,7 @@ class _SettingsSwitchTile extends StatelessWidget {
   final String title;
   final String description;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
