@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ import '../../../services/domain/service_detail_config.dart';
 import '../controllers/order_history_controller.dart';
 import '../../domain/entities/address_suggestion.dart';
 import '../../domain/use_cases/fetch_address_suggestions.dart';
+import '../../domain/entities/service_quote.dart';
+import '../../domain/repositories/order_checkout_repository.dart';
 import '../utils/order_history_formatters.dart';
 import '../widgets/order_date_picker.dart';
 
@@ -61,6 +64,8 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   String? _errorMessage;
   bool _timeInputHasError = false;
   int _suggestRequestId = 0;
+  ServiceQuote? _quote;
+  bool _isQuoteLoading = true;
 
   static const double _fallbackTotalPrice = 7500;
   static const Duration _suggestDebounceDuration = Duration(milliseconds: 350);
@@ -83,6 +88,7 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     _date = DateTime.now().add(const Duration(days: 1));
     _time = const TimeOfDay(hour: 11, minute: 0);
     _timeController = TextEditingController(text: _formatTime(_time));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadQuote());
   }
 
   @override
@@ -164,10 +170,16 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                   ),
                 ),
                 _CheckoutBar(
-                  total: OrderHistoryFormatters.formatPrice(_totalPrice),
+                  total: _isQuoteLoading
+                      ? 'Рассчитываем...'
+                      : OrderHistoryFormatters.formatPrice(_totalPrice),
                   isLoading: _isSubmitting,
                   errorMessage: _errorMessage,
-                  onSubmit: _isSubmitting || !_hasSelectedAddressSuggestion
+                  onSubmit:
+                      _isSubmitting ||
+                          _isQuoteLoading ||
+                          _quote == null ||
+                          !_hasSelectedAddressSuggestion
                       ? null
                       : _submitOrder,
                 ),
@@ -179,13 +191,15 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     );
   }
 
-  double get _totalPrice => widget.config.calculateTotalPrice(
-    area: _area,
-    selectedRoomId: widget.selectedRoomId,
-    selectedCleaningId: widget.selectedCleaningId,
-    selectedAddOns: widget.selectedAddOns,
-    fallbackPrice: widget.service.priceFrom ?? _fallbackTotalPrice,
-  );
+  double get _totalPrice =>
+      _quote?.totalPrice ??
+      widget.config.calculateTotalPrice(
+        area: _area,
+        selectedRoomId: widget.selectedRoomId,
+        selectedCleaningId: widget.selectedCleaningId,
+        selectedAddOns: widget.selectedAddOns,
+        fallbackPrice: widget.service.priceFrom ?? _fallbackTotalPrice,
+      );
 
   String? get _roomLabel {
     final roomOptions = widget.config.roomOptions;
@@ -247,7 +261,30 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     });
 
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+      final quote = _quote;
+      if (quote == null) {
+        throw StateError('Не удалось рассчитать стоимость заказа');
+      }
+      final scheduledAt = DateTime(
+        _date.year,
+        _date.month,
+        _date.day,
+        parsedTime.hour,
+        parsedTime.minute,
+      );
+      await context.read<OrderCheckoutRepository>().createOrder(
+        quoteId: quote.id,
+        idempotencyKey: _newIdempotencyKey(),
+        scheduledAt: scheduledAt,
+        address: {
+          'full_address': _addressController.text.trim(),
+          'entrance': _nullableText(_entranceController),
+          'floor': _nullableText(_floorController),
+          'apartment': _nullableText(_apartmentController),
+          'intercom': _nullableText(_intercomController),
+          'comment': _nullableText(_commentController),
+        },
+      );
 
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
@@ -273,6 +310,37 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
         });
       }
     }
+  }
+
+  Future<void> _loadQuote() async {
+    try {
+      final quote = await context.read<OrderCheckoutRepository>().createQuote(
+        serviceId: widget.service.id,
+        area: _area,
+        roomOptionId: widget.selectedRoomId,
+        cleaningOptionId: widget.selectedCleaningId,
+        extraOptionIds: widget.selectedAddOns,
+      );
+      if (mounted) setState(() => _quote = quote);
+    } catch (error) {
+      if (mounted) setState(() => _errorMessage = _mapError(error));
+    } finally {
+      if (mounted) setState(() => _isQuoteLoading = false);
+    }
+  }
+
+  String? _nullableText(TextEditingController controller) {
+    final text = controller.text.trim();
+    return text.isEmpty ? null : text;
+  }
+
+  String _newIdempotencyKey() {
+    final random = Random.secure();
+    String segment(int length) => List.generate(
+      length,
+      (_) => random.nextInt(16).toRadixString(16),
+    ).join();
+    return '${segment(8)}-${segment(4)}-4${segment(3)}-${(8 + random.nextInt(4)).toRadixString(16)}${segment(3)}-${segment(12)}';
   }
 
   void _handleAddressChanged(String value) {

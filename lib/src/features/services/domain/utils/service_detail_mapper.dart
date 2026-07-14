@@ -11,38 +11,44 @@ class ServiceDetailMapper {
     required ServiceDetail detail,
   }) {
     final preset = ServiceDetailPresets.resolve(service);
-    final roomOptions = detail.roomOptions
-        .map(
-          (option) => ServiceRoomOption(
-            id: option.id,
-            label: option.title,
-            area: option.subtitle ?? '',
-            priceModifier: option.priceModifier,
-          ),
-        )
-        .toList();
-    final cleaningOptions = detail.cleaningOptions
-        .map(
-          (option) => ServiceCleaningOption(
-            id: option.id,
-            label: option.title,
-            subtitle: option.subtitle,
-            isAddon: option.isAddon,
-            priceModifier: option.priceModifier,
-          ),
-        )
-        .toList();
-    final extraOptions = detail.extraOptions
-        .map(
-          (option) => ServiceCleaningOption(
-            id: option.id,
-            label: option.title,
-            subtitle: option.subtitle,
-            isAddon: true,
-            priceModifier: option.priceModifier,
-          ),
-        )
-        .toList();
+    final roomOptions =
+        (detail.roomOptions.toList()
+              ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0)))
+            .map(
+              (option) => ServiceRoomOption(
+                id: option.id,
+                label: option.title,
+                area: option.subtitle ?? '',
+                priceModifier: option.priceModifier,
+              ),
+            )
+            .toList();
+    final cleaningOptions =
+        (detail.cleaningOptions.toList()
+              ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0)))
+            .map(
+              (option) => ServiceCleaningOption(
+                id: option.id,
+                label: option.title,
+                subtitle: option.subtitle,
+                isAddon: option.isAddon,
+                priceModifier: option.priceModifier,
+              ),
+            )
+            .toList();
+    final extraOptions =
+        (detail.extraOptions.toList()
+              ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0)))
+            .map(
+              (option) => ServiceCleaningOption(
+                id: option.id,
+                label: option.title,
+                subtitle: option.subtitle,
+                isAddon: true,
+                priceModifier: option.priceModifier,
+              ),
+            )
+            .toList();
     final mergedCleaningOptions = [...cleaningOptions, ...extraOptions];
 
     final bool hasRooms = roomOptions.isNotEmpty;
@@ -84,7 +90,7 @@ class ServiceDetailMapper {
       initialArea: initialArea,
       minArea: minArea,
       maxArea: maxArea,
-      areaStep: preset.areaStep,
+      areaStep: detail.pricing?.areaStep ?? preset.areaStep,
       basePrice: detail.pricing?.basePrice,
       pricePerSqm: detail.pricing?.pricePerSqm,
       minPrice: detail.pricing?.minPrice,

@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../src/core/network/api_client.dart';
 import '../src/core/storage/preferences_storage.dart';
-import '../src/core/theme/app_theme.dart';
 import '../src/features/auth/data/datasources/auth_local_data_source.dart';
 import '../src/features/auth/data/datasources/auth_remote_data_source.dart';
 import '../src/features/auth/data/repositories/auth_repository_impl.dart';
 import '../src/features/auth/domain/repositories/auth_repository.dart';
 import '../src/features/auth/presentation/controllers/auth_controller.dart';
-import '../src/features/auth/presentation/pages/auth_page.dart';
 import '../src/features/home/presentation/controllers/home_controller.dart';
+import '../src/features/home/data/datasources/home_remote_data_source.dart';
 import '../src/features/orders/data/datasources/cleaner_order_history_remote_data_source.dart';
 import '../src/features/orders/data/datasources/cleaner_orders_remote_data_source.dart';
 import '../src/features/orders/data/datasources/order_history_remote_data_source.dart';
@@ -19,11 +17,14 @@ import '../src/features/orders/data/repositories/address_suggestions_repository_
 import '../src/features/orders/data/repositories/cleaner_order_history_repository_impl.dart';
 import '../src/features/orders/data/repositories/cleaner_orders_repository_impl.dart';
 import '../src/features/orders/data/repositories/order_history_repository_impl.dart';
+import '../src/features/orders/data/repositories/order_checkout_repository_impl.dart';
+import '../src/features/orders/data/datasources/order_checkout_remote_data_source.dart';
 import '../src/features/orders/data/services/address_suggest_service.dart';
 import '../src/features/orders/domain/repositories/address_suggestions_repository.dart';
 import '../src/features/orders/domain/repositories/cleaner_order_history_repository.dart';
 import '../src/features/orders/domain/repositories/cleaner_orders_repository.dart';
 import '../src/features/orders/domain/repositories/order_history_repository.dart';
+import '../src/features/orders/domain/repositories/order_checkout_repository.dart';
 import '../src/features/orders/domain/use_cases/fetch_address_suggestions.dart';
 import '../src/features/orders/presentation/controllers/cleaner_order_history_controller.dart';
 import '../src/features/orders/presentation/controllers/cleaner_orders_controller.dart';
@@ -36,6 +37,7 @@ import '../src/features/services/data/datasources/services_remote_data_source.da
 import '../src/features/services/data/repositories/services_repository_impl.dart';
 import '../src/features/services/domain/repositories/services_repository.dart';
 import '../src/features/services/presentation/controllers/services_controller.dart';
+import 'router_host.dart';
 
 class App extends StatelessWidget {
   const App({
@@ -71,13 +73,22 @@ class App extends StatelessWidget {
           ),
         ),
         Provider<ServicesRepository>(
-          create: (_) => ServicesRepositoryImpl(
-            remoteDataSource: ServicesRemoteDataSource(),
+          create: (context) => ServicesRepositoryImpl(
+            remoteDataSource: ServicesRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         Provider<OrderHistoryRepository>(
           create: (_) => OrderHistoryRepositoryImpl(
             remoteDataSource: OrderHistoryRemoteDataSource(),
+          ),
+        ),
+        Provider<OrderCheckoutRepository>(
+          create: (context) => OrderCheckoutRepositoryImpl(
+            remoteDataSource: OrderCheckoutRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         Provider<AddressSuggestService>(create: (_) => AddressSuggestService()),
@@ -104,10 +115,18 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(
             repository: context.read<AuthRepository>(),
+            apiClient: context.read<ApiClient>(),
             useApi: useApi,
           )..restoreSession(),
         ),
-        ChangeNotifierProvider<HomeController>(create: (_) => HomeController()),
+        ChangeNotifierProvider<HomeController>(
+          create: (context) => HomeController(
+            useApi: useApi,
+            remoteDataSource: HomeRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
+          ),
+        ),
         ChangeNotifierProvider<OrderHistoryController>(
           create: (context) => OrderHistoryController(
             repository: context.read<OrderHistoryRepository>(),
@@ -137,19 +156,7 @@ class App extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Klinomania',
-        locale: const Locale('ru', 'RU'),
-        supportedLocales: const [Locale('ru', 'RU')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: AppTheme.lightTheme,
-        home: const AuthPage(),
-      ),
+      child: const RouterHost(),
     );
   }
 }

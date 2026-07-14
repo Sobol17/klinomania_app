@@ -2,10 +2,23 @@ import 'package:dio/dio.dart';
 
 class ApiClient {
   ApiClient({Dio? dio, String baseUrl = ''})
-    : _dio = dio ?? Dio(_defaultOptions(baseUrl));
+    : _dio = dio ?? Dio(_defaultOptions(baseUrl)) {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            await _notifyUnauthorized();
+          }
+          handler.next(error);
+        },
+      ),
+    );
+  }
 
   final Dio _dio;
   String? _token;
+  Future<void> Function()? _onUnauthorized;
+  bool _isHandlingUnauthorized = false;
 
   static BaseOptions _defaultOptions(String baseUrl) {
     return BaseOptions(
@@ -19,6 +32,11 @@ class ApiClient {
 
   Dio get client => _dio;
 
+  /// Registers the application-level action for an expired or invalid session.
+  void setUnauthorizedHandler(Future<void> Function()? handler) {
+    _onUnauthorized = handler;
+  }
+
   void setAuthToken(String? token, {String tokenType = 'Bearer'}) {
     _token = token;
     if (token == null || token.isEmpty) {
@@ -30,6 +48,20 @@ class ApiClient {
   }
 
   String? get token => _token;
+
+  Future<void> _notifyUnauthorized() async {
+    final handler = _onUnauthorized;
+    if (handler == null || _isHandlingUnauthorized) {
+      return;
+    }
+
+    _isHandlingUnauthorized = true;
+    try {
+      await handler();
+    } finally {
+      _isHandlingUnauthorized = false;
+    }
+  }
 
   Future<Response<T>> post<T>(
     String path, {

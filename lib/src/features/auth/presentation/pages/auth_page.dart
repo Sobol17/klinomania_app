@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
-import '../../../home/presentation/pages/home_page.dart';
 import '../../domain/entities/auth_session.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_background.dart';
@@ -66,9 +65,6 @@ class _AuthPageState extends State<AuthPage> {
     return Consumer<AuthController>(
       builder: (context, controller, _) {
         final step = controller.step;
-        if (step == AuthStep.authenticated) {
-          return const HomePage();
-        }
         return Scaffold(
           body: Stack(
             children: [

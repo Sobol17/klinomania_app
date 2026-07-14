@@ -43,6 +43,7 @@ class ServicePricing {
     required this.minArea,
     required this.maxArea,
     required this.minPrice,
+    required this.areaStep,
   });
 
   final double? basePrice;
@@ -50,6 +51,7 @@ class ServicePricing {
   final double? minArea;
   final double? maxArea;
   final double? minPrice;
+  final double? areaStep;
 }
 
 class ServiceOption {
@@ -60,6 +62,7 @@ class ServiceOption {
     required this.isAddon,
     required this.isDefault,
     required this.priceModifier,
+    required this.sortOrder,
   });
 
   final String id;
@@ -68,4 +71,5 @@ class ServiceOption {
   final bool isAddon;
   final bool isDefault;
   final double? priceModifier;
+  final int? sortOrder;
 }

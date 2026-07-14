@@ -153,6 +153,7 @@ class ServicePricingModel {
     required this.minArea,
     required this.maxArea,
     required this.minPrice,
+    required this.areaStep,
   });
 
   final double? basePrice;
@@ -160,6 +161,7 @@ class ServicePricingModel {
   final double? minArea;
   final double? maxArea;
   final double? minPrice;
+  final double? areaStep;
 
   factory ServicePricingModel.fromJson(Map<String, dynamic> json) {
     return ServicePricingModel(
@@ -168,6 +170,7 @@ class ServicePricingModel {
       minArea: _parseDouble(json['min_area'] ?? json['minArea']),
       maxArea: _parseDouble(json['max_area'] ?? json['maxArea']),
       minPrice: _parseDouble(json['min_price'] ?? json['minPrice']),
+      areaStep: _parseDouble(json['area_step'] ?? json['areaStep']),
     );
   }
 
@@ -178,6 +181,7 @@ class ServicePricingModel {
       minArea: minArea,
       maxArea: maxArea,
       minPrice: minPrice,
+      areaStep: areaStep,
     );
   }
 
@@ -197,6 +201,7 @@ class ServiceOptionModel {
     required this.isAddon,
     required this.isDefault,
     required this.priceModifier,
+    required this.sortOrder,
   });
 
   final String id;
@@ -205,6 +210,7 @@ class ServiceOptionModel {
   final bool isAddon;
   final bool isDefault;
   final double? priceModifier;
+  final int? sortOrder;
 
   factory ServiceOptionModel.fromJson(
     Map<String, dynamic> json, {
@@ -219,6 +225,7 @@ class ServiceOptionModel {
       priceModifier: _parseDouble(
         json['price_modifier'] ?? json['priceModifier'],
       ),
+      sortOrder: _parseInt(json['sort_order'] ?? json['sortOrder']),
     );
   }
 
@@ -230,6 +237,7 @@ class ServiceOptionModel {
       isAddon: isAddon,
       isDefault: isDefault,
       priceModifier: priceModifier,
+      sortOrder: sortOrder,
     );
   }
 
@@ -246,5 +254,11 @@ class ServiceOptionModel {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value);
     return null;
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 }

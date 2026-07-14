@@ -1,14 +1,22 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 enum AuthStep { welcome, phoneInput, otpInput, cleanerLogin, authenticated }
 
 class AuthController extends ChangeNotifier {
-  AuthController({required this.repository, this.useApi = true});
+  AuthController({
+    required this.repository,
+    required ApiClient apiClient,
+    this.useApi = true,
+  }) : _apiClient = apiClient {
+    _apiClient.setUnauthorizedHandler(handleUnauthorized);
+  }
 
   final AuthRepository repository;
+  final ApiClient _apiClient;
   final bool useApi;
 
   AuthStep _step = AuthStep.welcome;
@@ -17,6 +25,8 @@ class AuthController extends ChangeNotifier {
   String _phoneNumber = '';
   AuthSession? _session;
   UserRole _role = UserRole.client;
+  bool _isRestoringSession = true;
+  bool _isClearingUnauthorizedSession = false;
 
   AuthStep get step => _step;
   bool get isLoading => _isLoading;
@@ -25,6 +35,7 @@ class AuthController extends ChangeNotifier {
   AuthSession? get session => _session;
   UserRole get role => _role;
   bool get isAuthenticated => _step == AuthStep.authenticated;
+  bool get isRestoringSession => _isRestoringSession;
 
   void _setStep(AuthStep step) {
     _step = step;
@@ -71,15 +82,20 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> restoreSession() async {
-    final restoredSession = await repository.restoreSession();
-    if (restoredSession == null) {
-      _setStep(AuthStep.welcome);
-      return;
-    }
+    try {
+      final restoredSession = await repository.restoreSession();
+      if (restoredSession == null) {
+        _step = AuthStep.welcome;
+        return;
+      }
 
-    _session = restoredSession;
-    _role = restoredSession.role;
-    _setStep(AuthStep.authenticated);
+      _session = restoredSession;
+      _role = restoredSession.role;
+      _step = AuthStep.authenticated;
+    } finally {
+      _isRestoringSession = false;
+      notifyListeners();
+    }
   }
 
   Future<void> submitPhone(String phone) async {
@@ -207,6 +223,32 @@ class AuthController extends ChangeNotifier {
     _phoneNumber = '';
     _role = UserRole.client;
     _setStep(AuthStep.phoneInput);
+  }
+
+  /// Called by [ApiClient] after any API response with status code 401.
+  Future<void> handleUnauthorized() async {
+    if (_isClearingUnauthorizedSession) {
+      return;
+    }
+
+    _isClearingUnauthorizedSession = true;
+    try {
+      await repository.clearSession();
+      _session = null;
+      _phoneNumber = '';
+      _role = UserRole.client;
+      _errorMessage = null;
+      _step = AuthStep.welcome;
+      notifyListeners();
+    } finally {
+      _isClearingUnauthorizedSession = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _apiClient.setUnauthorizedHandler(null);
+    super.dispose();
   }
 
   void _applySession(AuthSession session) {

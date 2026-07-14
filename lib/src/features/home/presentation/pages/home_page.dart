@@ -65,6 +65,7 @@ class _HomeTabState extends State<_HomeTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ServicesController>().ensureLoaded();
+      context.read<HomeController>().ensureSummaryLoaded();
     });
   }
 
