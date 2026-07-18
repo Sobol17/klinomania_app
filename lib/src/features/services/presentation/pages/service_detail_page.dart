@@ -63,7 +63,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
     _syncSelection(config);
     final totalPrice = config.calculateTotalPrice(
-      area: _area,
       selectedRoomId: _selectedRoomId,
       selectedCleaningId: _selectedCleaningId,
       selectedAddOns: _selectedAddOns,
@@ -201,7 +200,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   void _openCheckout() {
     final config = _activeConfig;
     final payload = config.toCheckoutPayload(
-      area: _area,
       selectedRoomId: _selectedRoomId,
       selectedCleaningId: _selectedCleaningId,
       selectedAddOns: _selectedAddOns,
@@ -211,7 +209,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         builder: (_) => OrderCheckoutPage(
           service: _activeService,
           config: config,
-          area: payload.area,
           selectedRoomId: payload.selectedRoomId,
           selectedCleaningId: payload.selectedCleaningId,
           selectedAddOns: payload.selectedAddOns,

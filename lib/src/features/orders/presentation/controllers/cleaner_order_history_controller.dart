@@ -4,17 +4,9 @@ import '../../domain/entities/cleaner_order.dart';
 import '../../domain/repositories/cleaner_order_history_repository.dart';
 
 class CleanerOrderHistoryController extends ChangeNotifier {
-  CleanerOrderHistoryController({
-    required this.repository,
-    this.useApi = true,
-  }) {
-    if (!useApi) {
-      _orders = buildMockCleanerOrders();
-    }
-  }
+  CleanerOrderHistoryController({required this.repository});
 
   final CleanerOrderHistoryRepository repository;
-  final bool useApi;
 
   List<CleanerOrder> _orders = [];
   bool _isLoading = false;
@@ -40,11 +32,7 @@ class CleanerOrderHistoryController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        _orders = await repository.fetchHistory();
-      } else {
-        _orders = buildMockCleanerOrders();
-      }
+      _orders = await repository.fetchHistory();
     } catch (error) {
       _errorMessage = _mapError(error);
     } finally {

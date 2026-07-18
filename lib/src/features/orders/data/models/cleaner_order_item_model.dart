@@ -40,27 +40,44 @@ class CleanerOrderItemModel {
   final List<String> additionalOptions;
 
   factory CleanerOrderItemModel.fromJson(Map<String, dynamic> json) {
+    final address = _map(json['address']);
+    final service = _map(json['service']);
+    final roomOption = _map(json['room_option']);
+    final cleaningOption = _map(json['cleaning_option']);
     return CleanerOrderItemModel(
-      id: json['id']?.toString() ?? '',
+      id: json['public_id']?.toString() ?? json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
-      propertyType: json['property_type']?.toString() ?? '',
-      address: json['address']?.toString() ?? '',
-      entrance: json['entrance']?.toString(),
-      floor: json['floor']?.toString(),
-      apartment: json['apartment']?.toString(),
-      intercom: json['intercom']?.toString(),
-      comment: json['comment']?.toString(),
+      propertyType:
+          json['property_type']?.toString() ?? service['id']?.toString() ?? '',
+      address:
+          address['full_address']?.toString() ??
+          json['address']?.toString() ??
+          '',
+      entrance: address['entrance']?.toString() ?? json['entrance']?.toString(),
+      floor: address['floor']?.toString() ?? json['floor']?.toString(),
+      apartment:
+          address['apartment']?.toString() ?? json['apartment']?.toString(),
+      intercom: address['intercom']?.toString() ?? json['intercom']?.toString(),
+      comment: address['comment']?.toString() ?? json['comment']?.toString(),
       scheduledAt: _parseDate(json['scheduled_at']) ?? DateTime.now(),
       areaSqm: _parseDouble(json['area_sqm']),
-      cleaningType: json['cleaning_type']?.toString() ?? '',
+      cleaningType:
+          json['cleaning_type']?.toString() ??
+          cleaningOption['title']?.toString() ??
+          service['title']?.toString() ??
+          '',
       windowCleaning: _parseBool(json['window_cleaning']),
       paymentMethod: json['payment_method']?.toString() ?? '',
       totalPrice: _parseDouble(json['total_price']),
       roomsDescription: _stringOrNull(
-        json['rooms_description'] ?? json['roomsDescription'],
+        json['rooms_description'] ??
+            json['roomsDescription'] ??
+            roomOption['title'],
       ),
       additionalOptions: _stringList(
-        json['additional_options'] ?? json['additionalOptions'],
+        json['additional_options'] ??
+            json['additionalOptions'] ??
+            json['extra_options'],
       ),
     );
   }
@@ -151,6 +168,7 @@ class CleanerOrderItemModel {
       case 'completed':
         return CleanerOrderStatus.completed;
       case 'assigned':
+      case 'team_formed':
       case 'in_progress':
       case 'inprogress':
       case 'accepted':
@@ -203,11 +221,23 @@ class CleanerOrderItemModel {
   static List<String> _stringList(dynamic value) {
     if (value is Iterable) {
       return value
-          .map((item) => item.toString().trim())
+          .map((item) {
+            if (item is Map) {
+              return item['title']?.toString().trim() ?? '';
+            }
+            return item.toString().trim();
+          })
           .where((item) => item.isNotEmpty)
           .toList(growable: false);
     }
     return const [];
+  }
+
+  static Map<String, dynamic> _map(dynamic value) {
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return const {};
   }
 
   static String _mapPlanName(String value) {

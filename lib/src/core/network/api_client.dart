@@ -5,6 +5,15 @@ class ApiClient {
     : _dio = dio ?? Dio(_defaultOptions(baseUrl)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = _token;
+          if (token == null || token.isEmpty) {
+            options.headers.remove('Authorization');
+          } else {
+            options.headers['Authorization'] = '$_tokenType $token';
+          }
+          handler.next(options);
+        },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
             await _notifyUnauthorized();
@@ -17,6 +26,7 @@ class ApiClient {
 
   final Dio _dio;
   String? _token;
+  String _tokenType = 'Bearer';
   Future<void> Function()? _onUnauthorized;
   bool _isHandlingUnauthorized = false;
 
@@ -39,12 +49,13 @@ class ApiClient {
 
   void setAuthToken(String? token, {String tokenType = 'Bearer'}) {
     _token = token;
+    _tokenType = tokenType;
     if (token == null || token.isEmpty) {
       _dio.options.headers.remove('Authorization');
       return;
     }
 
-    _dio.options.headers['Authorization'] = '$tokenType $token';
+    _dio.options.headers['Authorization'] = '$_tokenType $token';
   }
 
   String? get token => _token;

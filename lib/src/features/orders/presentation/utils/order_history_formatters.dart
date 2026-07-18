@@ -87,22 +87,34 @@ class OrderHistoryFormatters {
 extension OrderHistoryStatusStyle on OrderHistoryStatus {
   String get label {
     switch (this) {
-      case OrderHistoryStatus.awaitingCleaner:
-        return 'Ожидает клинера';
+      case OrderHistoryStatus.processing:
+        return 'В обработке';
+      case OrderHistoryStatus.confirmed:
+        return 'Подтверждена';
+      case OrderHistoryStatus.teamFormed:
+        return 'Команда сформирована';
       case OrderHistoryStatus.inProgress:
-        return 'В процессе';
+        return 'В работе';
+      case OrderHistoryStatus.awaitingPayment:
+        return 'Ожидает оплаты';
       case OrderHistoryStatus.completed:
-        return 'Завершен';
+        return 'Выполнена';
       case OrderHistoryStatus.cancelled:
-        return 'Отменен';
+        return 'Отменена';
     }
   }
 
   Color get color {
     switch (this) {
-      case OrderHistoryStatus.awaitingCleaner:
+      case OrderHistoryStatus.processing:
+        return AppColors.primary;
+      case OrderHistoryStatus.confirmed:
+        return AppColors.primary;
+      case OrderHistoryStatus.teamFormed:
         return AppColors.primary;
       case OrderHistoryStatus.inProgress:
+        return AppColors.primary;
+      case OrderHistoryStatus.awaitingPayment:
         return AppColors.primary;
       case OrderHistoryStatus.completed:
         return AppColors.success;

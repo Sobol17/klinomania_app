@@ -266,7 +266,7 @@ class _CleanerHistoryHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'История заказов',
+          'История заявок',
           style: theme.textTheme.titleLarge?.copyWith(
             fontFamily: 'LovelaceText',
             fontWeight: FontWeight.w700,
@@ -334,7 +334,7 @@ class _CleanerHistoryEmptyCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
-        'История заказов пока пуста',
+        'История заявок пока пуста',
         style: theme.textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondary,
         ),

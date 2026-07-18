@@ -8,6 +8,8 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../orders/presentation/pages/cleaner_order_history_page.dart';
 import '../../../orders/presentation/pages/cleaner_orders_page.dart';
 import '../../../orders/presentation/pages/order_history_page.dart';
+import '../../../orders/presentation/controllers/order_history_controller.dart';
+import '../../../orders/presentation/controllers/cleaner_order_history_controller.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../services/presentation/controllers/services_controller.dart';
 import '../../../services/presentation/pages/service_detail_page.dart';
@@ -36,7 +38,17 @@ class HomePage extends StatelessWidget {
           backgroundColor: AppColors.background,
           bottomNavigationBar: CustomBottomNavigation(
             currentIndex: controller.currentNavigationIndex,
-            onDestinationSelected: controller.selectNavigationIndex,
+            onDestinationSelected: (index) {
+              controller.selectNavigationIndex(index);
+              if (index != HomeController.historyTabIndex) {
+                return;
+              }
+              if (isCleaner) {
+                context.read<CleanerOrderHistoryController>().loadHistory();
+              } else {
+                context.read<OrderHistoryController>().loadHistory();
+              }
+            },
             firstLabel: isCleaner ? 'Заявки' : 'Уборки',
           ),
           body: IndexedStack(

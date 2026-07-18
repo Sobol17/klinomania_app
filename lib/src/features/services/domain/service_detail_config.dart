@@ -68,13 +68,11 @@ class ServiceDetailConfig {
   final double? minPrice;
 
   ServiceCheckoutPayload toCheckoutPayload({
-    required double area,
     required String? selectedRoomId,
     required String? selectedCleaningId,
     required Set<String> selectedAddOns,
   }) {
     return ServiceCheckoutPayload(
-      area: area,
       selectedRoomId: selectedRoomId,
       selectedCleaningId: selectedCleaningId,
       selectedAddOns: selectedAddOns,
@@ -82,17 +80,13 @@ class ServiceDetailConfig {
   }
 
   double calculateTotalPrice({
-    required double area,
     required String? selectedRoomId,
     required String? selectedCleaningId,
     required Set<String> selectedAddOns,
     double? fallbackPrice,
   }) {
-    final double safeArea = area.isFinite && area > 0 ? area : 0;
     final bool hasPricing = basePrice != null || pricePerSqm != null;
-    double total = hasPricing
-        ? (basePrice ?? 0) + (pricePerSqm ?? 0) * safeArea
-        : (fallbackPrice ?? 0);
+    double total = hasPricing ? (basePrice ?? 0) : (fallbackPrice ?? 0);
 
     total += _modifierForRoom(selectedRoomId);
     total += _modifierForCleaning(selectedCleaningId);
@@ -140,13 +134,11 @@ class ServiceDetailConfig {
 
 class ServiceCheckoutPayload {
   const ServiceCheckoutPayload({
-    required this.area,
     required this.selectedRoomId,
     required this.selectedCleaningId,
     required this.selectedAddOns,
   });
 
-  final double area;
   final String? selectedRoomId;
   final String? selectedCleaningId;
   final Set<String> selectedAddOns;

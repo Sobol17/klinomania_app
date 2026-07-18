@@ -14,6 +14,12 @@ class CleanerOrdersRepositoryImpl implements CleanerOrdersRepository {
   }
 
   @override
+  Future<CleanerOrder> fetchOrderDetails(String publicId) async {
+    final item = await remoteDataSource.fetchOrderDetails(publicId);
+    return item.toEntity();
+  }
+
+  @override
   Future<void> acceptOrder(String orderId) {
     return remoteDataSource.acceptOrder(orderId);
   }

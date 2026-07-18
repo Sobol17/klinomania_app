@@ -36,12 +36,14 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
             controller.isLoading && controller.orders.isEmpty;
         final Widget listContent;
         if (showLoading) {
-          listContent = const Center(child: CircularProgressIndicator());
+          listContent = const _OrdersLoadingList();
         } else if (filteredOrders.isEmpty) {
-          listContent = _EmptyOrdersPlaceholder(filter: _filter);
+          listContent = _EmptyOrdersList(filter: _filter);
         } else {
           listContent = ListView.separated(
-            physics: const BouncingScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
             itemBuilder: (context, index) {
               final order = filteredOrders[index];
@@ -103,7 +105,12 @@ class _CleanerOrdersPageState extends State<CleanerOrdersPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Expanded(child: listContent),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: controller.loadOrders,
+                      child: listContent,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -312,8 +319,25 @@ class _CleanerOrderCard extends StatelessWidget {
   }
 }
 
-class _EmptyOrdersPlaceholder extends StatelessWidget {
-  const _EmptyOrdersPlaceholder({required this.filter});
+class _OrdersLoadingList extends StatelessWidget {
+  const _OrdersLoadingList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      children: const [
+        SizedBox(
+          height: 180,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyOrdersList extends StatelessWidget {
+  const _EmptyOrdersList({required this.filter});
 
   final CleanerOrdersFilter filter;
 
@@ -336,17 +360,27 @@ class _EmptyOrdersPlaceholder extends StatelessWidget {
         break;
     }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      children: [
+        SizedBox(
+          height: 180,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

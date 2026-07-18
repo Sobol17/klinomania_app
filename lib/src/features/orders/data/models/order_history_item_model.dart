@@ -17,6 +17,7 @@ class OrderHistoryItemModel {
     required this.windowCleaning,
     required this.paymentMethod,
     required this.totalPrice,
+    required this.cleaner,
     this.roomsDescription,
     this.additionalOptions = const [],
   });
@@ -36,31 +37,50 @@ class OrderHistoryItemModel {
   final bool windowCleaning;
   final String paymentMethod;
   final double totalPrice;
+  final OrderCleaner cleaner;
   final String? roomsDescription;
   final List<String> additionalOptions;
 
   factory OrderHistoryItemModel.fromJson(Map<String, dynamic> json) {
+    final address = _map(json['address']);
+    final service = _map(json['service']);
+    final roomOption = _map(json['room_option']);
+    final cleaningOption = _map(json['cleaning_option']);
     return OrderHistoryItemModel(
-      id: json['id']?.toString() ?? '',
+      id: json['public_id']?.toString() ?? json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
-      propertyType: json['property_type']?.toString() ?? '',
-      address: json['address']?.toString() ?? '',
-      entrance: json['entrance']?.toString(),
-      floor: json['floor']?.toString(),
-      apartment: json['apartment']?.toString(),
-      intercom: json['intercom']?.toString(),
-      comment: json['comment']?.toString(),
+      propertyType:
+          json['property_type']?.toString() ?? service['id']?.toString() ?? '',
+      address:
+          address['full_address']?.toString() ??
+          json['address']?.toString() ??
+          '',
+      entrance: address['entrance']?.toString() ?? json['entrance']?.toString(),
+      floor: address['floor']?.toString() ?? json['floor']?.toString(),
+      apartment:
+          address['apartment']?.toString() ?? json['apartment']?.toString(),
+      intercom: address['intercom']?.toString() ?? json['intercom']?.toString(),
+      comment: address['comment']?.toString() ?? json['comment']?.toString(),
       scheduledAt: _parseDate(json['scheduled_at']) ?? DateTime.now(),
       areaSqm: _parseDouble(json['area_sqm']),
-      cleaningType: json['cleaning_type']?.toString() ?? '',
+      cleaningType:
+          json['cleaning_type']?.toString() ??
+          cleaningOption['title']?.toString() ??
+          service['title']?.toString() ??
+          '',
       windowCleaning: json['window_cleaning'] == true,
       paymentMethod: json['payment_method']?.toString() ?? '',
       totalPrice: _parseDouble(json['total_price']),
+      cleaner: _parseCleaner(json['cleaners']),
       roomsDescription: _stringOrNull(
-        json['rooms_description'] ?? json['roomsDescription'],
+        json['rooms_description'] ??
+            json['roomsDescription'] ??
+            roomOption['title'],
       ),
       additionalOptions: _stringList(
-        json['additional_options'] ?? json['additionalOptions'],
+        json['additional_options'] ??
+            json['additionalOptions'] ??
+            json['extra_options'],
       ),
     );
   }
@@ -101,7 +121,7 @@ class OrderHistoryItemModel {
       startStatusLabel: statusLabel,
       endStatusLabel: statusLabel,
       durationLabel: statusLabel,
-      cleaner: _fallbackCleaner,
+      cleaner: cleaner,
     );
   }
 
@@ -148,39 +168,91 @@ class OrderHistoryItemModel {
   static List<String> _stringList(dynamic value) {
     if (value is Iterable) {
       return value
-          .map((item) => item.toString().trim())
+          .map((item) {
+            if (item is Map) {
+              return item['title']?.toString().trim() ?? '';
+            }
+            return item.toString().trim();
+          })
           .where((item) => item.isNotEmpty)
           .toList(growable: false);
     }
     return const [];
   }
 
+  static Map<String, dynamic> _map(dynamic value) {
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return const {};
+  }
+
+  static OrderCleaner _parseCleaner(dynamic value) {
+    if (value is! Iterable || value.isEmpty) {
+      return _unassignedCleaner;
+    }
+
+    final cleaner = _map(value.first);
+    final profile = _map(cleaner['cleaner_profile']);
+    final name = profile['name']?.toString().trim();
+    final fallbackName = cleaner['name']?.toString().trim();
+    final phone = cleaner['phone']?.toString().trim();
+    final email = cleaner['email']?.toString().trim();
+    final contact = phone?.isNotEmpty == true
+        ? 'Телефон: $phone'
+        : email?.isNotEmpty == true
+        ? 'Email: $email'
+        : 'Клинер';
+
+    return OrderCleaner(
+      name: name?.isNotEmpty == true
+          ? name!
+          : fallbackName?.isNotEmpty == true
+          ? fallbackName!
+          : 'Клинер',
+      speciality: contact,
+    );
+  }
+
   static OrderHistoryStatus _mapStatus(String value) {
-    switch (value) {
+    switch (value.toLowerCase()) {
+      case 'processing':
+        return OrderHistoryStatus.processing;
+      case 'confirmed':
+        return OrderHistoryStatus.confirmed;
+      case 'team_formed':
+        return OrderHistoryStatus.teamFormed;
       case 'in_progress':
-      case 'inProgress':
         return OrderHistoryStatus.inProgress;
+      case 'awaiting_payment':
+        return OrderHistoryStatus.awaitingPayment;
       case 'completed':
         return OrderHistoryStatus.completed;
       case 'cancelled':
       case 'canceled':
         return OrderHistoryStatus.cancelled;
       case 'new':
-        return OrderHistoryStatus.awaitingCleaner;
+        return OrderHistoryStatus.processing;
     }
-    return OrderHistoryStatus.awaitingCleaner;
+    return OrderHistoryStatus.processing;
   }
 
   static String _statusLabel(OrderHistoryStatus status) {
     switch (status) {
+      case OrderHistoryStatus.processing:
+        return 'В обработке';
+      case OrderHistoryStatus.confirmed:
+        return 'Подтверждена';
+      case OrderHistoryStatus.teamFormed:
+        return 'Команда сформирована';
       case OrderHistoryStatus.inProgress:
-        return 'В процессе';
+        return 'В работе';
+      case OrderHistoryStatus.awaitingPayment:
+        return 'Ожидает оплаты';
       case OrderHistoryStatus.completed:
-        return 'Завершено';
+        return 'Выполнена';
       case OrderHistoryStatus.cancelled:
-        return 'Отменено';
-      case OrderHistoryStatus.awaitingCleaner:
-        return 'Ожидание клинера';
+        return 'Отменена';
     }
   }
 
@@ -202,7 +274,7 @@ class OrderHistoryItemModel {
     }
   }
 
-  static const OrderCleaner _fallbackCleaner = OrderCleaner(
+  static const OrderCleaner _unassignedCleaner = OrderCleaner(
     name: 'Клинер назначается',
     speciality: 'Все виды уборки',
   );

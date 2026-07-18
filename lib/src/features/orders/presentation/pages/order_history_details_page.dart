@@ -1,28 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../domain/entities/order_history_entry.dart';
+import '../controllers/order_history_controller.dart';
 import '../utils/order_history_formatters.dart';
+import 'payment_webview_page.dart';
 
-class OrderHistoryDetailsPage extends StatelessWidget {
+class OrderHistoryDetailsPage extends StatefulWidget {
   const OrderHistoryDetailsPage({super.key, required this.order});
 
   final OrderHistoryEntry order;
 
-  void _showPlaceholderAction(BuildContext context, String message) {
+  @override
+  State<OrderHistoryDetailsPage> createState() =>
+      _OrderHistoryDetailsPageState();
+}
+
+class _OrderHistoryDetailsPageState extends State<OrderHistoryDetailsPage> {
+  void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _cancelOrder() async {
+    final error = await context.read<OrderHistoryController>().cancelOrder(
+      widget.order.id,
+    );
+    if (!mounted) return;
+    if (error != null) {
+      _showMessage(error);
+      return;
+    }
+    _showMessage('Заявка отменена');
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _openPayment(OrderHistoryEntry order) async {
+    try {
+      final payment = await context
+          .read<OrderHistoryController>()
+          .requestPaymentLink(order.id);
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => PaymentWebViewPage(paymentUrl: payment.paymentUrl),
+        ),
+      );
+      if (!mounted) return;
+      await context.read<OrderHistoryController>().loadHistory();
+    } catch (error) {
+      if (mounted) {
+        _showMessage(_mapError(error));
+      }
+    }
+  }
+
+  String _mapError(Object error) {
+    if (error is StateError && error.message.isNotEmpty) {
+      return error.message;
+    }
+    return 'Что-то пошло не так. Попробуйте снова';
+  }
+
+  OrderHistoryEntry _currentOrder(OrderHistoryController controller) {
+    for (final order in controller.orders) {
+      if (order.id == widget.order.id) {
+        return order;
+      }
+    }
+    return widget.order;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final controller = context.watch<OrderHistoryController>();
+    final order = _currentOrder(controller);
     final bool hasCleanerAssigned =
-        order.status != OrderHistoryStatus.awaitingCleaner;
-    final Widget actionButton = order.canCancel
+        order.status == OrderHistoryStatus.teamFormed ||
+        order.status == OrderHistoryStatus.inProgress ||
+        order.status == OrderHistoryStatus.awaitingPayment ||
+        order.status == OrderHistoryStatus.completed;
+    final Widget actionButton = order.canPay
+        ? CTAButton(
+            label: 'Оплатить',
+            isLoading: controller.isRequestingPayment(order.id),
+            onPressed: controller.isRequestingPayment(order.id)
+                ? null
+                : () => _openPayment(order),
+          )
+        : order.canCancel
         ? Theme(
             data: theme.copyWith(
               colorScheme: theme.colorScheme.copyWith(
@@ -31,18 +102,15 @@ class OrderHistoryDetailsPage extends StatelessWidget {
             ),
             child: CTAButton(
               label: 'Отменить',
-              onPressed: () => _showPlaceholderAction(
-                context,
-                'Мы свяжемся с клинером и подтвердим отмену',
-              ),
+              isLoading: controller.isCancelling(order.id),
+              onPressed: controller.isCancelling(order.id)
+                  ? null
+                  : _cancelOrder,
             ),
           )
         : CTAButton(
             label: 'Повторить уборку',
-            onPressed: () => _showPlaceholderAction(
-              context,
-              'Скоро повтор заказа будет доступен',
-            ),
+            onPressed: () => _showMessage('Скоро повтор заказа будет доступен'),
           );
 
     return Scaffold(

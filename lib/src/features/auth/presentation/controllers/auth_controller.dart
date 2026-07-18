@@ -91,6 +91,10 @@ class AuthController extends ChangeNotifier {
 
       _session = restoredSession;
       _role = restoredSession.role;
+      _apiClient.setAuthToken(
+        restoredSession.accessToken,
+        tokenType: restoredSession.tokenType,
+      );
       _step = AuthStep.authenticated;
     } finally {
       _isRestoringSession = false;
@@ -252,6 +256,7 @@ class AuthController extends ChangeNotifier {
   }
 
   void _applySession(AuthSession session) {
+    _apiClient.setAuthToken(session.accessToken, tokenType: session.tokenType);
     _session = session;
     _role = session.role;
     _step = AuthStep.authenticated;

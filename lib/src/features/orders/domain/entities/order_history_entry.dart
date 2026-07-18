@@ -1,4 +1,12 @@
-enum OrderHistoryStatus { awaitingCleaner, inProgress, completed, cancelled }
+enum OrderHistoryStatus {
+  processing,
+  confirmed,
+  teamFormed,
+  inProgress,
+  awaitingPayment,
+  completed,
+  cancelled,
+}
 
 class OrderCleaner {
   const OrderCleaner({
@@ -53,8 +61,11 @@ class OrderHistoryEntry {
   final bool highlightCard;
   final OrderCleaner cleaner;
 
-  bool get canCancel => status == OrderHistoryStatus.awaitingCleaner;
-  bool get canRepeat => status != OrderHistoryStatus.awaitingCleaner;
+  bool get canCancel =>
+      status == OrderHistoryStatus.processing ||
+      status == OrderHistoryStatus.confirmed;
+  bool get canRepeat => !canCancel;
+  bool get canPay => status == OrderHistoryStatus.awaitingPayment;
 }
 
 List<OrderHistoryEntry> buildMockOrderHistory() {
@@ -74,7 +85,7 @@ List<OrderHistoryEntry> buildMockOrderHistory() {
   final orders = <OrderHistoryEntry>[
     OrderHistoryEntry(
       id: 'awaiting-basic-minimum',
-      status: OrderHistoryStatus.awaitingCleaner,
+      status: OrderHistoryStatus.processing,
       serviceName: 'Базовый минимум',
       cleaningType: 'Расширенная поддерживающая уборка',
       roomsDescription: '1-комнатная',

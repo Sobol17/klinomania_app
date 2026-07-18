@@ -4,14 +4,9 @@ import '../../domain/entities/cleaner_order.dart';
 import '../../domain/repositories/cleaner_orders_repository.dart';
 
 class CleanerOrdersController extends ChangeNotifier {
-  CleanerOrdersController({required this.repository, this.useApi = true}) {
-    if (!useApi) {
-      _orders = buildMockCleanerOrders();
-    }
-  }
+  CleanerOrdersController({required this.repository});
 
   final CleanerOrdersRepository repository;
-  final bool useApi;
 
   List<CleanerOrder> _orders = [];
   bool _isLoading = false;
@@ -45,11 +40,7 @@ class CleanerOrdersController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        _orders = await repository.fetchOrders();
-      } else {
-        _orders = buildMockCleanerOrders();
-      }
+      _orders = await repository.fetchOrders();
       _startedOrderIds.removeWhere((id) {
         final index = _orders.indexWhere((order) => order.id == id);
         if (index == -1) return true;
@@ -71,9 +62,7 @@ class CleanerOrdersController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        await repository.acceptOrder(orderId);
-      }
+      await repository.acceptOrder(orderId);
       _markOrderAccepted(orderId);
       return null;
     } catch (error) {
@@ -133,9 +122,7 @@ class CleanerOrdersController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        await repository.startOrder(orderId);
-      }
+      await repository.startOrder(orderId);
       _startedOrderIds.add(orderId);
       return null;
     } catch (error) {
@@ -166,9 +153,7 @@ class CleanerOrdersController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        await repository.completeOrder(orderId);
-      }
+      await repository.completeOrder(orderId);
       _markOrderCompleted(orderId);
       return null;
     } catch (error) {

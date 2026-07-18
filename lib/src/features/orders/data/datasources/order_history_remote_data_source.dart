@@ -1,69 +1,74 @@
+import 'package:dio/dio.dart';
+
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_error_mapper.dart';
+import '../../domain/entities/payment_operation.dart';
 import '../models/order_history_item_model.dart';
 
 class OrderHistoryRemoteDataSource {
-  OrderHistoryRemoteDataSource();
+  OrderHistoryRemoteDataSource({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
-  final List<OrderHistoryItemModel> _history = [
-    OrderHistoryItemModel(
-      id: 'order-1',
-      status: 'completed',
-      propertyType: 'standard',
-      address: 'ул. Ленина, 10',
-      entrance: '1',
-      floor: '4',
-      apartment: '42',
-      intercom: '42',
-      comment: 'Позвонить за 15 минут',
-      scheduledAt: DateTime(2026, 6, 12, 10),
-      areaSqm: 0,
-      cleaningType: 'standard',
-      windowCleaning: false,
-      paymentMethod: '',
-      totalPrice: 8500,
-      roomsDescription: '1-комнатная',
-      additionalOptions: ['Холодильник внутри', 'Микроволновка внутри'],
-    ),
-    OrderHistoryItemModel(
-      id: 'order-2',
-      status: 'new',
-      propertyType: 'premium',
-      address: 'ул. Байкальская, 25',
-      entrance: '2',
-      floor: '8',
-      apartment: '81',
-      intercom: null,
-      comment: null,
-      scheduledAt: DateTime(2026, 6, 15, 12),
-      areaSqm: 0,
-      cleaningType: 'premium',
-      windowCleaning: true,
-      paymentMethod: '',
-      totalPrice: 23850,
-      roomsDescription: '2-комнатная',
-      additionalOptions: ['Убираем на балконе/лоджии', 'Моем окна'],
-    ),
-    OrderHistoryItemModel(
-      id: 'order-3',
-      status: 'completed',
-      propertyType: 'cottage',
-      address: 'ул. Советская, 18',
-      entrance: null,
-      floor: null,
-      apartment: '12',
-      intercom: null,
-      comment: null,
-      scheduledAt: DateTime(2026, 6, 10, 9),
-      areaSqm: 0,
-      cleaningType: 'cottage',
-      windowCleaning: false,
-      paymentMethod: '',
-      totalPrice: 25000,
-      additionalOptions: const [],
-    ),
-  ];
+  final ApiClient _apiClient;
 
   Future<List<OrderHistoryItemModel>> fetchHistory() async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    return List<OrderHistoryItemModel>.unmodifiable(_history);
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/client/orders',
+      );
+      final data = response.data?['data'];
+      if (data is! List) {
+        throw StateError('Некорректный ответ сервера');
+      }
+      return data
+          .whereType<Map>()
+          .map(
+            (item) =>
+                OrderHistoryItemModel.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false);
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      await _apiClient.post<void>('/api/v1/client/orders/$orderId/cancel');
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
+  }
+
+  Future<PaymentOperation> requestPaymentLink(String orderId) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/api/v1/client/orders/$orderId/payment',
+      );
+      final data = response.data?['data'];
+      if (data is! Map) {
+        throw StateError('Некорректный ответ сервера');
+      }
+
+      final paymentUrl = Uri.tryParse(data['payment_url']?.toString() ?? '');
+      final expiresAt = DateTime.tryParse(data['expires_at']?.toString() ?? '');
+      final id = data['id']?.toString() ?? '';
+      if (id.isEmpty ||
+          paymentUrl == null ||
+          paymentUrl.scheme != 'https' ||
+          paymentUrl.host.isEmpty ||
+          expiresAt == null) {
+        throw StateError('Некорректный ответ сервера');
+      }
+
+      return PaymentOperation(
+        id: id,
+        paymentUrl: paymentUrl,
+        expiresAt: expiresAt,
+        status: data['status']?.toString() ?? '',
+      );
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
   }
 }

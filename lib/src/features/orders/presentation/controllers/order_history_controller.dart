@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/order_history_entry.dart';
+import '../../domain/entities/payment_operation.dart';
 import '../../domain/repositories/order_history_repository.dart';
 
 class OrderHistoryController extends ChangeNotifier {
-  OrderHistoryController({required this.repository, this.useApi = true}) {
-    if (!useApi) {
-      _orders = buildMockOrderHistory();
-    }
-  }
+  OrderHistoryController({required this.repository});
 
   final OrderHistoryRepository repository;
-  final bool useApi;
 
   List<OrderHistoryEntry> _orders = [];
   bool _isLoading = false;
   bool _hasLoaded = false;
   String? _errorMessage;
+  String? _cancellingOrderId;
+  String? _requestingPaymentOrderId;
 
   List<OrderHistoryEntry> get orders => _orders;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool isCancelling(String orderId) => _cancellingOrderId == orderId;
+  bool isRequestingPayment(String orderId) =>
+      _requestingPaymentOrderId == orderId;
 
   void ensureLoaded() {
     if (_hasLoaded || _isLoading) {
@@ -37,15 +38,45 @@ class OrderHistoryController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (useApi) {
-        _orders = await repository.fetchHistory();
-      } else {
-        _orders = buildMockOrderHistory();
-      }
+      _orders = await repository.fetchHistory();
     } catch (error) {
       _errorMessage = _mapError(error);
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> cancelOrder(String orderId) async {
+    if (_cancellingOrderId != null) {
+      return 'Подождите, заявка обрабатывается';
+    }
+
+    _cancellingOrderId = orderId;
+    notifyListeners();
+    try {
+      await repository.cancelOrder(orderId);
+      await loadHistory();
+      return null;
+    } catch (error) {
+      return _mapError(error);
+    } finally {
+      _cancellingOrderId = null;
+      notifyListeners();
+    }
+  }
+
+  Future<PaymentOperation> requestPaymentLink(String orderId) async {
+    if (_requestingPaymentOrderId != null) {
+      throw StateError('Подождите, ссылка на оплату создаётся');
+    }
+
+    _requestingPaymentOrderId = orderId;
+    notifyListeners();
+    try {
+      return await repository.requestPaymentLink(orderId);
+    } finally {
+      _requestingPaymentOrderId = null;
       notifyListeners();
     }
   }

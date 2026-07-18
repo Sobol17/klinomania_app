@@ -6,11 +6,13 @@ import '../../../../shared/widgets/app_back_button.dart';
 import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../../home/presentation/widgets/home_background.dart';
 import '../../domain/entities/cleaner_order.dart';
+import '../controllers/cleaner_order_details_controller.dart';
 import '../controllers/cleaner_orders_controller.dart';
 import '../utils/order_history_formatters.dart';
 import 'cleaner_order_checklist_page.dart';
+import 'cleaner_order_details_error.dart';
 
-class CleanerOrderDetailsPage extends StatelessWidget {
+class CleanerOrderDetailsPage extends StatefulWidget {
   const CleanerOrderDetailsPage({
     super.key,
     required this.order,
@@ -20,6 +22,20 @@ class CleanerOrderDetailsPage extends StatelessWidget {
   final CleanerOrder order;
   final bool isHistoryView;
 
+  @override
+  State<CleanerOrderDetailsPage> createState() =>
+      _CleanerOrderDetailsPageState();
+}
+
+class _CleanerOrderDetailsPageState extends State<CleanerOrderDetailsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CleanerOrderDetailsController>().loadOrder(widget.order.id);
+    });
+  }
+
   void _showSnack(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -28,7 +44,7 @@ class CleanerOrderDetailsPage extends StatelessWidget {
 
   Future<void> _acceptOrder(BuildContext context) async {
     final controller = context.read<CleanerOrdersController>();
-    final error = await controller.acceptOrder(order.id);
+    final error = await controller.acceptOrder(widget.order.id);
     if (!context.mounted) return;
     if (error == null) {
       _showSnack(context, 'Заказ закреплён за вами');
@@ -45,12 +61,17 @@ class CleanerOrderDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<CleanerOrdersController>();
     final CleanerOrder activeOrder = controller.orders.firstWhere(
-      (existing) => existing.id == order.id,
-      orElse: () => order,
+      (existing) => existing.id == widget.order.id,
+      orElse: () => widget.order,
     );
-    final bool isCompleted = activeOrder.isCompleted;
-    final bool canAccept = activeOrder.canAccept;
-    final bool isAccepting = controller.isAccepting(activeOrder.id);
+    final detailsController = context.watch<CleanerOrderDetailsController>();
+    final detailsOrder = detailsController.order;
+    final order = detailsOrder ?? activeOrder;
+    final bool isLoading = detailsController.isLoading && detailsOrder == null;
+    final String? loadError = detailsController.errorMessage;
+    final bool isCompleted = order.isCompleted;
+    final bool canAccept = order.canAccept;
+    final bool isAccepting = controller.isAccepting(order.id);
     final String actionLabel;
     if (canAccept) {
       actionLabel = 'Принять заказ';
@@ -88,40 +109,51 @@ class CleanerOrderDetailsPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _OrderHeaderCard(order: activeOrder),
-                        const SizedBox(height: 16),
-                        _CleanerOrderDetailsCard(order: activeOrder),
-                        if (!isHistoryView) ...[
-                          const SizedBox(height: 18),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: CTAButton(
-                                  label: 'Как добраться?',
-                                  onPressed: () => _showSnack(
-                                    context,
-                                    'Скоро построим маршрут',
+                        if (isLoading)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 64),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else ...[
+                          if (loadError != null) ...[
+                            DetailsLoadError(message: loadError),
+                            const SizedBox(height: 16),
+                          ],
+                          _OrderHeaderCard(order: order),
+                          const SizedBox(height: 16),
+                          _CleanerOrderDetailsCard(order: order),
+                          if (!widget.isHistoryView) ...[
+                            const SizedBox(height: 18),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: CTAButton(
+                                    label: 'Как добраться?',
+                                    onPressed: () => _showSnack(
+                                      context,
+                                      'Скоро построим маршрут',
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: CTAButton(
-                                  label: 'Задать вопрос',
-                                  variant: CTAButtonVariant.outline,
-                                  onPressed: () => _contactManager(context),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: CTAButton(
+                                    label: 'Задать вопрос',
+                                    variant: CTAButtonVariant.outline,
+                                    onPressed: () => _contactManager(context),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                         ],
                       ],
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: isHistoryView
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  child: widget.isHistoryView
                       ? CTAButton(
                           label: 'Задать вопрос',
                           variant: CTAButtonVariant.outline,
@@ -140,9 +172,8 @@ class CleanerOrderDetailsPage extends StatelessWidget {
                               ),
                               onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => CleanerOrderChecklistPage(
-                                    order: activeOrder,
-                                  ),
+                                  builder: (_) =>
+                                      CleanerOrderChecklistPage(order: order),
                                 ),
                               ),
                             ),

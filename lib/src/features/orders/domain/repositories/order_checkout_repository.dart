@@ -1,18 +1,12 @@
-import '../entities/service_quote.dart';
-
 abstract class OrderCheckoutRepository {
-  Future<ServiceQuote> createQuote({
+  Future<void> createOrder({
     required String serviceId,
-    required double area,
     required String? roomOptionId,
     required String? cleaningOptionId,
     required Set<String> extraOptionIds,
-  });
-
-  Future<void> createOrder({
-    required String quoteId,
     required String idempotencyKey,
     required Map<String, dynamic> address,
+    required String? comment,
     required DateTime scheduledAt,
   });
 }

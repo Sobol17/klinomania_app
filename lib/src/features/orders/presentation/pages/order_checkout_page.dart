@@ -14,11 +14,10 @@ import '../../../home/domain/entities/cleaning_service.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../home/presentation/widgets/home_background.dart';
 import '../../../services/domain/service_detail_config.dart';
-import '../controllers/order_history_controller.dart';
 import '../../domain/entities/address_suggestion.dart';
-import '../../domain/use_cases/fetch_address_suggestions.dart';
-import '../../domain/entities/service_quote.dart';
 import '../../domain/repositories/order_checkout_repository.dart';
+import '../../domain/use_cases/fetch_address_suggestions.dart';
+import '../controllers/order_history_controller.dart';
 import '../utils/order_history_formatters.dart';
 import '../widgets/order_date_picker.dart';
 
@@ -27,7 +26,6 @@ class OrderCheckoutPage extends StatefulWidget {
     super.key,
     required this.service,
     required this.config,
-    required this.area,
     required this.selectedRoomId,
     required this.selectedCleaningId,
     required this.selectedAddOns,
@@ -35,7 +33,6 @@ class OrderCheckoutPage extends StatefulWidget {
 
   final CleaningService service;
   final ServiceDetailConfig config;
-  final double area;
   final String? selectedRoomId;
   final String? selectedCleaningId;
   final Set<String> selectedAddOns;
@@ -45,7 +42,6 @@ class OrderCheckoutPage extends StatefulWidget {
 }
 
 class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
-  late double _area;
   late final TextEditingController _addressController;
   late final TextEditingController _entranceController;
   late final TextEditingController _floorController;
@@ -64,16 +60,12 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
   String? _errorMessage;
   bool _timeInputHasError = false;
   int _suggestRequestId = 0;
-  ServiceQuote? _quote;
-  bool _isQuoteLoading = true;
-
   static const double _fallbackTotalPrice = 7500;
   static const Duration _suggestDebounceDuration = Duration(milliseconds: 350);
 
   @override
   void initState() {
     super.initState();
-    _area = widget.area;
     _addressController = TextEditingController();
     _entranceController = TextEditingController();
     _floorController = TextEditingController();
@@ -88,7 +80,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     _date = DateTime.now().add(const Duration(days: 1));
     _time = const TimeOfDay(hour: 11, minute: 0);
     _timeController = TextEditingController(text: _formatTime(_time));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadQuote());
   }
 
   @override
@@ -170,16 +161,10 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                   ),
                 ),
                 _CheckoutBar(
-                  total: _isQuoteLoading
-                      ? 'Рассчитываем...'
-                      : OrderHistoryFormatters.formatPrice(_totalPrice),
+                  total: OrderHistoryFormatters.formatPrice(_totalPrice),
                   isLoading: _isSubmitting,
                   errorMessage: _errorMessage,
-                  onSubmit:
-                      _isSubmitting ||
-                          _isQuoteLoading ||
-                          _quote == null ||
-                          !_hasSelectedAddressSuggestion
+                  onSubmit: _isSubmitting || !_hasSelectedAddressSuggestion
                       ? null
                       : _submitOrder,
                 ),
@@ -191,15 +176,12 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     );
   }
 
-  double get _totalPrice =>
-      _quote?.totalPrice ??
-      widget.config.calculateTotalPrice(
-        area: _area,
-        selectedRoomId: widget.selectedRoomId,
-        selectedCleaningId: widget.selectedCleaningId,
-        selectedAddOns: widget.selectedAddOns,
-        fallbackPrice: widget.service.priceFrom ?? _fallbackTotalPrice,
-      );
+  double get _totalPrice => widget.config.calculateTotalPrice(
+    selectedRoomId: widget.selectedRoomId,
+    selectedCleaningId: widget.selectedCleaningId,
+    selectedAddOns: widget.selectedAddOns,
+    fallbackPrice: widget.service.priceFrom ?? _fallbackTotalPrice,
+  );
 
   String? get _roomLabel {
     final roomOptions = widget.config.roomOptions;
@@ -261,10 +243,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
     });
 
     try {
-      final quote = _quote;
-      if (quote == null) {
-        throw StateError('Не удалось рассчитать стоимость заказа');
-      }
       final scheduledAt = DateTime(
         _date.year,
         _date.month,
@@ -273,16 +251,19 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
         parsedTime.minute,
       );
       await context.read<OrderCheckoutRepository>().createOrder(
-        quoteId: quote.id,
+        serviceId: widget.service.id,
+        roomOptionId: widget.selectedRoomId,
+        cleaningOptionId: widget.selectedCleaningId,
+        extraOptionIds: widget.selectedAddOns,
         idempotencyKey: _newIdempotencyKey(),
         scheduledAt: scheduledAt,
+        comment: _nullableText(_commentController),
         address: {
           'full_address': _addressController.text.trim(),
           'entrance': _nullableText(_entranceController),
           'floor': _nullableText(_floorController),
           'apartment': _nullableText(_apartmentController),
           'intercom': _nullableText(_intercomController),
-          'comment': _nullableText(_commentController),
         },
       );
 
@@ -309,23 +290,6 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
           _isSubmitting = false;
         });
       }
-    }
-  }
-
-  Future<void> _loadQuote() async {
-    try {
-      final quote = await context.read<OrderCheckoutRepository>().createQuote(
-        serviceId: widget.service.id,
-        area: _area,
-        roomOptionId: widget.selectedRoomId,
-        cleaningOptionId: widget.selectedCleaningId,
-        extraOptionIds: widget.selectedAddOns,
-      );
-      if (mounted) setState(() => _quote = quote);
-    } catch (error) {
-      if (mounted) setState(() => _errorMessage = _mapError(error));
-    } finally {
-      if (mounted) setState(() => _isQuoteLoading = false);
     }
   }
 
@@ -766,7 +730,7 @@ class _AddressSection extends StatelessWidget {
           const SizedBox(height: 12),
           _OrderTextField(
             controller: commentController,
-            label: 'Комментарий для клинера',
+            label: 'Комментарий',
             keyboardType: TextInputType.multiline,
             maxLines: 3,
             minLines: 3,

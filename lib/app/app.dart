@@ -27,6 +27,7 @@ import '../src/features/orders/domain/repositories/order_history_repository.dart
 import '../src/features/orders/domain/repositories/order_checkout_repository.dart';
 import '../src/features/orders/domain/use_cases/fetch_address_suggestions.dart';
 import '../src/features/orders/presentation/controllers/cleaner_order_history_controller.dart';
+import '../src/features/orders/presentation/controllers/cleaner_order_details_controller.dart';
 import '../src/features/orders/presentation/controllers/cleaner_orders_controller.dart';
 import '../src/features/orders/presentation/controllers/order_history_controller.dart';
 import '../src/features/profile/data/datasources/profile_remote_data_source.dart';
@@ -80,8 +81,10 @@ class App extends StatelessWidget {
           ),
         ),
         Provider<OrderHistoryRepository>(
-          create: (_) => OrderHistoryRepositoryImpl(
-            remoteDataSource: OrderHistoryRemoteDataSource(),
+          create: (context) => OrderHistoryRepositoryImpl(
+            remoteDataSource: OrderHistoryRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         Provider<OrderCheckoutRepository>(
@@ -103,13 +106,17 @@ class App extends StatelessWidget {
           ),
         ),
         Provider<CleanerOrderHistoryRepository>(
-          create: (_) => CleanerOrderHistoryRepositoryImpl(
-            remoteDataSource: CleanerOrderHistoryRemoteDataSource(),
+          create: (context) => CleanerOrderHistoryRepositoryImpl(
+            remoteDataSource: CleanerOrderHistoryRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         Provider<CleanerOrdersRepository>(
-          create: (_) => CleanerOrdersRepositoryImpl(
-            remoteDataSource: CleanerOrdersRemoteDataSource(),
+          create: (context) => CleanerOrdersRepositoryImpl(
+            remoteDataSource: CleanerOrdersRemoteDataSource(
+              apiClient: context.read<ApiClient>(),
+            ),
           ),
         ),
         ChangeNotifierProvider<AuthController>(
@@ -130,19 +137,21 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<OrderHistoryController>(
           create: (context) => OrderHistoryController(
             repository: context.read<OrderHistoryRepository>(),
-            useApi: useApi,
           ),
         ),
         ChangeNotifierProvider<CleanerOrderHistoryController>(
           create: (context) => CleanerOrderHistoryController(
             repository: context.read<CleanerOrderHistoryRepository>(),
-            useApi: useApi,
           ),
         ),
         ChangeNotifierProvider<CleanerOrdersController>(
           create: (context) => CleanerOrdersController(
             repository: context.read<CleanerOrdersRepository>(),
-            useApi: useApi,
+          ),
+        ),
+        ChangeNotifierProvider<CleanerOrderDetailsController>(
+          create: (context) => CleanerOrderDetailsController(
+            repository: context.read<CleanerOrdersRepository>(),
           ),
         ),
         ChangeNotifierProvider<ProfileController>(
