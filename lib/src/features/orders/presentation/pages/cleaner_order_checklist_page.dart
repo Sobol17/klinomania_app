@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../auth/presentation/widgets/cta_button.dart';
 import '../../domain/entities/cleaner_order.dart';
+import '../controllers/cleaner_order_details_controller.dart';
 import '../controllers/cleaner_orders_controller.dart';
 
 class CleanerOrderChecklistPage extends StatefulWidget {
@@ -18,36 +19,46 @@ class CleanerOrderChecklistPage extends StatefulWidget {
 }
 
 class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
-  final Set<int> _checkedIndexes = <int>{};
-
-  List<CleanerOrderServiceOption> get _items {
-    return widget.order.services
-        .where((service) => service.enabled)
+  List<CleanerOrderChecklistItem> _items(CleanerOrder order) {
+    return order.checklistSections
+        .expand((section) => section.items)
         .toList(growable: false);
   }
 
-  void _toggle(int index) {
-    setState(() {
-      if (_checkedIndexes.contains(index)) {
-        _checkedIndexes.remove(index);
-      } else {
-        _checkedIndexes.add(index);
-      }
-    });
+  Future<void> _completeItem(CleanerOrder order, String itemId) async {
+    final error = await context
+        .read<CleanerOrderDetailsController>()
+        .completeChecklistItem(orderId: order.id, itemId: itemId);
+    if (!mounted || error == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(error)));
   }
 
   Future<void> _closeOrder(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final controller = context.read<CleanerOrdersController>();
-    final error = await controller.completeOrder(widget.order.id);
+    final detailsController = context.read<CleanerOrderDetailsController>();
+    final result = await controller.completeOrder(widget.order.id);
     if (!mounted) return;
 
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(error ?? 'Заявка закрыта')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            result.checklistIncomplete
+                ? 'Отметьте все пункты чеклиста перед завершением заказа'
+                : result.errorMessage ?? 'Заявка закрыта',
+          ),
+        ),
+      );
 
-    if (error == null) {
+    if (result.checklistIncomplete) {
+      await detailsController.loadOrder(widget.order.id);
+      if (!mounted) return;
+    } else if (result.isSuccess) {
       navigator.pop();
     }
   }
@@ -55,9 +66,11 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final items = _items;
+    final detailsController = context.watch<CleanerOrderDetailsController>();
+    final order = detailsController.order ?? widget.order;
+    final items = _items(order);
     final total = items.length;
-    final completed = _checkedIndexes.length.clamp(0, total);
+    final completed = items.where((item) => item.completed).length;
     final progress = total == 0 ? 0.0 : completed / total;
     final canClose = completed == total;
     final isClosing = context.watch<CleanerOrdersController>().isCompleting(
@@ -87,7 +100,7 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    widget.order.planName,
+                    order.planName,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -95,7 +108,7 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.order.address,
+                    order.address,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                       height: 1.35,
@@ -109,7 +122,7 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Дополнительные опции',
+                    'Пункты уборки',
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
@@ -123,8 +136,13 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
                       _ChecklistTile(
                         index: i + 1,
                         label: items[i].label,
-                        isChecked: _checkedIndexes.contains(i),
-                        onTap: () => _toggle(i),
+                        isChecked: items[i].completed,
+                        isLoading: detailsController.isUpdatingChecklistItem(
+                          items[i].id,
+                        ),
+                        onTap: items[i].completed
+                            ? null
+                            : () => _completeItem(order, items[i].id),
                       ),
                       if (i != items.length - 1) const SizedBox(height: 10),
                     ],
@@ -215,13 +233,15 @@ class _ChecklistTile extends StatelessWidget {
     required this.index,
     required this.label,
     required this.isChecked,
+    required this.isLoading,
     required this.onTap,
   });
 
   final int index;
   final String label;
   final bool isChecked;
-  final VoidCallback onTap;
+  final bool isLoading;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +295,12 @@ class _ChecklistTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: AppColors.primary, width: 1.4),
               ),
-              child: isChecked
+              child: isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : isChecked
                   ? const Icon(Icons.check, color: AppColors.white, size: 20)
                   : null,
             ),

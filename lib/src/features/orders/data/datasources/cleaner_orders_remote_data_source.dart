@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_error_mapper.dart';
+import '../../../../core/network/checklist_incomplete_exception.dart';
 import '../models/cleaner_order_item_model.dart';
 
 class CleanerOrdersRemoteDataSource {
@@ -15,6 +16,20 @@ class CleanerOrdersRemoteDataSource {
   Future<void> startOrder(String orderId) => _post('$orderId/start');
 
   Future<void> completeOrder(String orderId) => _post('$orderId/complete');
+
+  Future<void> updateChecklistItem({
+    required String orderId,
+    required String itemId,
+  }) async {
+    try {
+      await _apiClient.patch<void>(
+        '/api/v1/cleaner/orders/$orderId/checklist/$itemId',
+        data: const {'completed': true},
+      );
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
+  }
 
   Future<CleanerOrderItemModel> fetchOrderDetails(String publicId) async {
     try {
@@ -53,8 +68,17 @@ class CleanerOrdersRemoteDataSource {
     try {
       await _apiClient.post<void>('/api/v1/cleaner/orders/$action');
     } on DioException catch (error) {
+      if (_isChecklistIncomplete(error)) {
+        throw const ChecklistIncompleteException();
+      }
       throw StateError(mapDioError(error));
     }
+  }
+
+  bool _isChecklistIncomplete(DioException error) {
+    if (error.response?.statusCode != 409) return false;
+    final data = error.response?.data;
+    return data is Map && data['code'] == 'checklist_incomplete';
   }
 
   List<CleanerOrderItemModel> _parseItems(dynamic data) {

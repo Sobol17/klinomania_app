@@ -390,6 +390,8 @@ extension CleanerOrderStatusStyle on CleanerOrderStatus {
     switch (this) {
       case CleanerOrderStatus.available:
         return 'Новый заказ';
+      case CleanerOrderStatus.awaitingPayment:
+        return 'Ожидает оплаты';
       case CleanerOrderStatus.assigned:
         return 'В работе';
       case CleanerOrderStatus.completed:
@@ -401,6 +403,8 @@ extension CleanerOrderStatusStyle on CleanerOrderStatus {
     switch (this) {
       case CleanerOrderStatus.available:
         return AppColors.primary;
+      case CleanerOrderStatus.awaitingPayment:
+        return AppColors.warning;
       case CleanerOrderStatus.assigned:
         return AppColors.primary;
       case CleanerOrderStatus.completed:

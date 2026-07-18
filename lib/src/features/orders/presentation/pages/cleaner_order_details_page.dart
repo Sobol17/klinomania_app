@@ -44,9 +44,12 @@ class _CleanerOrderDetailsPageState extends State<CleanerOrderDetailsPage> {
 
   Future<void> _acceptOrder(BuildContext context) async {
     final controller = context.read<CleanerOrdersController>();
+    final detailsController = context.read<CleanerOrderDetailsController>();
     final error = await controller.acceptOrder(widget.order.id);
     if (!context.mounted) return;
     if (error == null) {
+      await detailsController.loadOrder(widget.order.id);
+      if (!context.mounted) return;
       _showSnack(context, 'Заказ закреплён за вами');
     } else {
       _showSnack(context, error);
@@ -70,17 +73,20 @@ class _CleanerOrderDetailsPageState extends State<CleanerOrderDetailsPage> {
     final bool isLoading = detailsController.isLoading && detailsOrder == null;
     final String? loadError = detailsController.errorMessage;
     final bool isCompleted = order.isCompleted;
+    final bool isAwaitingPayment = order.isAwaitingPayment;
     final bool canAccept = order.canAccept;
     final bool isAccepting = controller.isAccepting(order.id);
     final String actionLabel;
     if (canAccept) {
       actionLabel = 'Принять заказ';
+    } else if (isAwaitingPayment) {
+      actionLabel = 'Ожидает оплаты';
     } else if (isCompleted) {
       actionLabel = 'Заказ завершен';
     } else {
       actionLabel = 'Связаться с клиентом';
     }
-    final VoidCallback? action = isCompleted
+    final VoidCallback? action = isCompleted || isAwaitingPayment
         ? null
         : () {
             if (canAccept) {
@@ -89,7 +95,8 @@ class _CleanerOrderDetailsPageState extends State<CleanerOrderDetailsPage> {
               _showSnack(context, 'Мы уведомим клиента о вашем статусе');
             }
           };
-    final bool showProgressActions = !isCompleted && !canAccept;
+    final bool showProgressActions =
+        !isCompleted && !isAwaitingPayment && !canAccept;
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -6,4 +6,8 @@ abstract class CleanerOrdersRepository {
   Future<void> acceptOrder(String orderId);
   Future<void> startOrder(String orderId);
   Future<void> completeOrder(String orderId);
+  Future<void> updateChecklistItem({
+    required String orderId,
+    required String itemId,
+  });
 }

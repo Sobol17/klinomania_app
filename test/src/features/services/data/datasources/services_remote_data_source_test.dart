@@ -32,6 +32,14 @@ void main() {
       'data': {
         'id': 'standard',
         'title': 'Базовый минимум',
+        'checklist': [
+          {'zone': 'everywhere', 'text': 'Пылесосим/моем пол и плинтус'},
+          {'zone': 'rooms', 'text': 'Моем зеркала и стеклянные поверхности'},
+        ],
+        'checklist_sections': [
+          {'zone': 'rooms', 'title': 'Комнаты'},
+          {'zone': 'everywhere', 'title': 'Везде'},
+        ],
         'pricing': {'area_step': 5},
         'room_options': [
           {'id': 'room-2', 'title': '2-комнатная', 'sort_order': 20},
@@ -47,6 +55,13 @@ void main() {
     expect(adapter.request?.path, '/api/v1/client/services/standard');
     expect(detail.pricing?.areaStep, 5);
     expect(detail.roomOptions.single.sortOrder, 20);
+    expect(detail.checklist.map((section) => section.title), [
+      'Комнаты',
+      'Везде',
+    ]);
+    expect(detail.checklist.first.items, [
+      'Моем зеркала и стеклянные поверхности',
+    ]);
   });
 }
 

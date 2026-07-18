@@ -7,6 +7,7 @@ class ServiceDetailModel {
     required this.subtitle,
     required this.shortDescription,
     required this.description,
+    required this.checklist,
     required this.cleanersLabel,
     required this.durationLabel,
     required this.priceFrom,
@@ -25,6 +26,7 @@ class ServiceDetailModel {
   final String? subtitle;
   final String? shortDescription;
   final String? description;
+  final List<ServiceChecklistSection> checklist;
   final String? cleanersLabel;
   final String? durationLabel;
   final double? priceFrom;
@@ -46,6 +48,10 @@ class ServiceDetailModel {
         json['short_description'] ?? json['shortDescription'],
       ),
       description: _stringOrNull(json['description']),
+      checklist: _parseChecklist(
+        checklist: json['checklist'],
+        sections: json['checklist_sections'],
+      ),
       cleanersLabel: _stringOrNull(
         json['cleaners_label'] ?? json['cleanersLabel'],
       ),
@@ -74,6 +80,7 @@ class ServiceDetailModel {
       subtitle: subtitle,
       shortDescription: shortDescription,
       description: description,
+      checklist: checklist,
       cleanersLabel: cleanersLabel,
       durationLabel: durationLabel,
       priceFrom: priceFrom,
@@ -136,6 +143,75 @@ class ServiceDetailModel {
     return const [];
   }
 
+  static List<ServiceChecklistSection> _parseChecklist({
+    required dynamic checklist,
+    required dynamic sections,
+  }) {
+    final items = _parseChecklistItems(checklist);
+    if (items.isEmpty) return const [];
+
+    final sectionMaps = sections is List
+        ? sections.whereType<Map>().map(Map<String, dynamic>.from).toList()
+        : const <Map<String, dynamic>>[];
+    if (sectionMaps.isEmpty) {
+      return [
+        ServiceChecklistSection(
+          zone: 'everywhere',
+          title: 'Везде',
+          items: items.map((item) => item.text).toList(growable: false),
+        ),
+      ];
+    }
+
+    return sectionMaps
+        .map((section) {
+          final zone =
+              _stringOrNull(
+                section['zone'] ?? section['id'] ?? section['key'],
+              ) ??
+              '';
+          final title =
+              _stringOrNull(
+                section['title'] ?? section['name'] ?? section['label'],
+              ) ??
+              zone;
+          return ServiceChecklistSection(
+            zone: zone,
+            title: title,
+            items: items
+                .where((item) => item.zone == zone)
+                .map((item) => item.text)
+                .toList(growable: false),
+          );
+        })
+        .where((section) => section.zone.isNotEmpty && section.items.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static List<_ChecklistItem> _parseChecklistItems(dynamic value) {
+    if (value is! List) return const [];
+
+    return value
+        .map((item) {
+          if (item is String) {
+            return _ChecklistItem(zone: 'everywhere', text: item.trim());
+          }
+          if (item is Map) {
+            return _ChecklistItem(
+              zone: _stringOrNull(item['zone']) ?? 'everywhere',
+              text:
+                  _stringOrNull(
+                    item['text'] ?? item['title'] ?? item['label'],
+                  ) ??
+                  '',
+            );
+          }
+          return const _ChecklistItem(zone: '', text: '');
+        })
+        .where((item) => item.text.isNotEmpty)
+        .toList(growable: false);
+  }
+
   static String? _stringOrNull(dynamic value) {
     if (value == null) return null;
     if (value is String) {
@@ -144,6 +220,13 @@ class ServiceDetailModel {
     }
     return value.toString();
   }
+}
+
+class _ChecklistItem {
+  const _ChecklistItem({required this.zone, required this.text});
+
+  final String zone;
+  final String text;
 }
 
 class ServicePricingModel {

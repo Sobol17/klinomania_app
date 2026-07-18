@@ -79,6 +79,7 @@ class ServiceDetailMapper {
     return ServiceDetailConfig(
       layout: layout,
       description: description,
+      checklist: detail.checklist,
       darkCard: preset.darkCard,
       arrivalMinutes: preset.arrivalMinutes,
       heroGradient: preset.heroGradient,

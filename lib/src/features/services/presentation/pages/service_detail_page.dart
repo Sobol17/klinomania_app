@@ -6,6 +6,7 @@ import '../../../../shared/widgets/bottom_navigation_bar.dart';
 import '../../../home/domain/entities/cleaning_service.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../../orders/presentation/pages/order_checkout_page.dart';
+import '../../domain/entities/service_detail.dart';
 import '../../domain/service_detail_config.dart';
 import '../../domain/service_detail_presets.dart';
 import '../controllers/services_controller.dart';
@@ -125,6 +126,10 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                             _ServiceDescriptionCard(
                               description: config.description,
                             ),
+                            const SizedBox(height: 20),
+                          ],
+                          if (config.checklist.isNotEmpty) ...[
+                            _ServiceChecklistCard(sections: config.checklist),
                             const SizedBox(height: 20),
                           ],
                           _ApartmentOptions(
@@ -531,6 +536,119 @@ class _ServiceDescriptionCard extends StatelessWidget {
           style: theme.textTheme.bodyMedium?.copyWith(
             color: AppColors.textSecondary,
             height: 1.45,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ServiceChecklistCard extends StatefulWidget {
+  const _ServiceChecklistCard({required this.sections});
+
+  final List<ServiceChecklistSection> sections;
+
+  @override
+  State<_ServiceChecklistCard> createState() => _ServiceChecklistCardState();
+}
+
+class _ServiceChecklistCardState extends State<_ServiceChecklistCard> {
+  var _selectedIndex = 0;
+
+  @override
+  void didUpdateWidget(covariant _ServiceChecklistCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_selectedIndex >= widget.sections.length) {
+      _selectedIndex = 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selectedSection = widget.sections[_selectedIndex];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Что входит в уборку',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            height: 1.16,
+          ),
+        ),
+        const SizedBox(height: 12),
+        DecoratedBox(
+          decoration: const BoxDecoration(
+            color: AppColors.bgBlue,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(widget.sections.length, (index) {
+                final section = widget.sections[index];
+                final selected = index == _selectedIndex;
+                return InkWell(
+                  onTap: () => setState(() => _selectedIndex = index),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: selected
+                              ? AppColors.darkBlue
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      section.title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: selected
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...selectedSection.items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.check,
+                    size: 22,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

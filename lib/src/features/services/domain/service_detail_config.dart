@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'entities/service_detail.dart';
+
 enum ServiceDetailLayout { apartment, house }
 
 class ServiceRoomOption {
@@ -36,6 +38,7 @@ class ServiceDetailConfig {
   const ServiceDetailConfig({
     required this.layout,
     required this.description,
+    this.checklist = const [],
     this.darkCard = false,
     this.arrivalMinutes = 60,
     this.heroGradient = const [Color(0xFFB8DDFF), Color(0xFFFFFFFF)],
@@ -53,6 +56,7 @@ class ServiceDetailConfig {
 
   final ServiceDetailLayout layout;
   final String description;
+  final List<ServiceChecklistSection> checklist;
   final bool darkCard;
   final int arrivalMinutes;
   final List<Color> heroGradient;

@@ -19,6 +19,7 @@ class CleanerOrderItemModel {
     required this.totalPrice,
     this.roomsDescription,
     this.additionalOptions = const [],
+    this.checklistSections = const [],
   });
 
   final String id;
@@ -38,6 +39,7 @@ class CleanerOrderItemModel {
   final double totalPrice;
   final String? roomsDescription;
   final List<String> additionalOptions;
+  final List<CleanerOrderChecklistSection> checklistSections;
 
   factory CleanerOrderItemModel.fromJson(Map<String, dynamic> json) {
     final address = _map(json['address']);
@@ -79,6 +81,10 @@ class CleanerOrderItemModel {
             json['additionalOptions'] ??
             json['extra_options'],
       ),
+      checklistSections: _parseChecklist(
+        checklist: json['checklist'],
+        sections: json['checklist_sections'],
+      ),
     );
   }
 
@@ -110,6 +116,7 @@ class CleanerOrderItemModel {
       area: areaSqm,
       status: statusValue,
       services: services,
+      checklistSections: checklistSections,
       highlightCard: statusValue == CleanerOrderStatus.available,
     );
   }
@@ -162,6 +169,64 @@ class CleanerOrderItemModel {
     return services;
   }
 
+  static List<CleanerOrderChecklistSection> _parseChecklist({
+    required dynamic checklist,
+    required dynamic sections,
+  }) {
+    if (checklist is! List) return const [];
+    final items = checklist
+        .whereType<Map>()
+        .map(
+          (item) => CleanerOrderChecklistItem(
+            id: _stringOrNull(item['id']) ?? '',
+            kind: _stringOrNull(item['kind']) ?? 'base_service',
+            zone: _stringOrNull(item['zone']) ?? 'everywhere',
+            label:
+                _stringOrNull(item['text'] ?? item['title'] ?? item['label']) ??
+                '',
+            completed: _parseBool(item['completed']),
+          ),
+        )
+        .where((item) => item.id.isNotEmpty && item.label.isNotEmpty)
+        .toList(growable: false);
+    if (items.isEmpty) return const [];
+
+    final sectionMaps = sections is List
+        ? sections.whereType<Map>().map(Map<String, dynamic>.from).toList()
+        : const <Map<String, dynamic>>[];
+    if (sectionMaps.isEmpty) {
+      return [
+        CleanerOrderChecklistSection(
+          zone: 'everywhere',
+          title: 'Везде',
+          items: items,
+        ),
+      ];
+    }
+
+    return sectionMaps
+        .map((section) {
+          final zone =
+              _stringOrNull(
+                section['zone'] ?? section['id'] ?? section['key'],
+              ) ??
+              '';
+          return CleanerOrderChecklistSection(
+            zone: zone,
+            title:
+                _stringOrNull(
+                  section['title'] ?? section['name'] ?? section['label'],
+                ) ??
+                zone,
+            items: items
+                .where((item) => item.zone == zone)
+                .toList(growable: false),
+          );
+        })
+        .where((section) => section.zone.isNotEmpty && section.items.isNotEmpty)
+        .toList(growable: false);
+  }
+
   static CleanerOrderStatus _mapStatus(String value) {
     final normalized = value.toLowerCase();
     switch (normalized) {
@@ -173,6 +238,8 @@ class CleanerOrderItemModel {
       case 'inprogress':
       case 'accepted':
         return CleanerOrderStatus.assigned;
+      case 'awaiting_payment':
+        return CleanerOrderStatus.awaitingPayment;
       case 'cancelled':
       case 'canceled':
         return CleanerOrderStatus.completed;

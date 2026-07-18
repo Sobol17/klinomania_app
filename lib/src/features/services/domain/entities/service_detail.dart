@@ -5,6 +5,7 @@ class ServiceDetail {
     required this.subtitle,
     required this.shortDescription,
     required this.description,
+    required this.checklist,
     required this.cleanersLabel,
     required this.durationLabel,
     required this.priceFrom,
@@ -23,6 +24,7 @@ class ServiceDetail {
   final String? subtitle;
   final String? shortDescription;
   final String? description;
+  final List<ServiceChecklistSection> checklist;
   final String? cleanersLabel;
   final String? durationLabel;
   final double? priceFrom;
@@ -34,6 +36,18 @@ class ServiceDetail {
   final List<ServiceOption> extraOptions;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+}
+
+class ServiceChecklistSection {
+  const ServiceChecklistSection({
+    required this.zone,
+    required this.title,
+    required this.items,
+  });
+
+  final String zone;
+  final String title;
+  final List<String> items;
 }
 
 class ServicePricing {

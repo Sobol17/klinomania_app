@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/network/checklist_incomplete_exception.dart';
 import '../../domain/entities/cleaner_order.dart';
 import '../../domain/repositories/cleaner_orders_repository.dart';
 
@@ -92,6 +93,7 @@ class CleanerOrdersController extends ChangeNotifier {
       area: existing.area,
       status: CleanerOrderStatus.assigned,
       services: existing.services,
+      checklistSections: existing.checklistSections,
       highlightCard: false,
     );
     final updatedOrders = List<CleanerOrder>.from(_orders);
@@ -133,20 +135,28 @@ class CleanerOrdersController extends ChangeNotifier {
     }
   }
 
-  Future<String?> completeOrder(String orderId) async {
+  Future<CleanerOrderCompletionResult> completeOrder(String orderId) async {
     if (_startingOrderId != null || _completingOrderId != null) {
-      return 'Подождите, заказ обрабатывается';
+      return const CleanerOrderCompletionResult(
+        errorMessage: 'Подождите, заказ обрабатывается',
+      );
     }
     final index = _orders.indexWhere((order) => order.id == orderId);
     if (index == -1) {
-      return 'Заказ не найден';
+      return const CleanerOrderCompletionResult(
+        errorMessage: 'Заказ не найден',
+      );
     }
     final existing = _orders[index];
     if (existing.isCompleted) {
-      return 'Заказ уже завершен';
+      return const CleanerOrderCompletionResult(
+        errorMessage: 'Заказ уже завершен',
+      );
     }
     if (existing.status != CleanerOrderStatus.assigned) {
-      return 'Сначала примите заказ';
+      return const CleanerOrderCompletionResult(
+        errorMessage: 'Сначала примите заказ',
+      );
     }
 
     _completingOrderId = orderId;
@@ -155,9 +165,12 @@ class CleanerOrdersController extends ChangeNotifier {
     try {
       await repository.completeOrder(orderId);
       _markOrderCompleted(orderId);
-      return null;
+      return const CleanerOrderCompletionResult();
     } catch (error) {
-      return _mapError(error);
+      if (error is ChecklistIncompleteException) {
+        return const CleanerOrderCompletionResult(checklistIncomplete: true);
+      }
+      return CleanerOrderCompletionResult(errorMessage: _mapError(error));
     } finally {
       _completingOrderId = null;
       notifyListeners();
@@ -184,6 +197,7 @@ class CleanerOrdersController extends ChangeNotifier {
       area: existing.area,
       status: CleanerOrderStatus.completed,
       services: existing.services,
+      checklistSections: existing.checklistSections,
       highlightCard: false,
     );
     final updatedOrders = List<CleanerOrder>.from(_orders);
@@ -198,4 +212,16 @@ class CleanerOrdersController extends ChangeNotifier {
 
     return 'Что-то пошло не так. Попробуйте снова';
   }
+}
+
+class CleanerOrderCompletionResult {
+  const CleanerOrderCompletionResult({
+    this.errorMessage,
+    this.checklistIncomplete = false,
+  });
+
+  final String? errorMessage;
+  final bool checklistIncomplete;
+
+  bool get isSuccess => errorMessage == null && !checklistIncomplete;
 }

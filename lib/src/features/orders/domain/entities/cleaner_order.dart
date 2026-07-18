@@ -1,10 +1,48 @@
-enum CleanerOrderStatus { available, assigned, completed }
+enum CleanerOrderStatus { available, awaitingPayment, assigned, completed }
 
 class CleanerOrderServiceOption {
   const CleanerOrderServiceOption({required this.label, this.enabled = true});
 
   final String label;
   final bool enabled;
+}
+
+class CleanerOrderChecklistItem {
+  const CleanerOrderChecklistItem({
+    required this.id,
+    required this.kind,
+    required this.zone,
+    required this.label,
+    required this.completed,
+  });
+
+  final String id;
+  final String kind;
+  final String zone;
+  final String label;
+  final bool completed;
+
+  CleanerOrderChecklistItem copyWith({bool? completed}) {
+    return CleanerOrderChecklistItem(
+      id: id,
+      kind: kind,
+      zone: zone,
+      label: label,
+      completed: completed ?? this.completed,
+    );
+  }
+}
+
+class CleanerOrderChecklistSection {
+  const CleanerOrderChecklistSection({
+    required this.zone,
+    required this.title,
+    required this.items,
+  });
+
+  final String zone;
+  final String title;
+  final List<CleanerOrderChecklistItem> items;
 }
 
 class CleanerOrder {
@@ -21,6 +59,7 @@ class CleanerOrder {
     required this.area,
     required this.status,
     required this.services,
+    this.checklistSections = const [],
     this.highlightCard = false,
   });
 
@@ -36,9 +75,11 @@ class CleanerOrder {
   final double area;
   final CleanerOrderStatus status;
   final List<CleanerOrderServiceOption> services;
+  final List<CleanerOrderChecklistSection> checklistSections;
   final bool highlightCard;
 
   bool get canAccept => status == CleanerOrderStatus.available;
+  bool get isAwaitingPayment => status == CleanerOrderStatus.awaitingPayment;
   bool get isCompleted => status == CleanerOrderStatus.completed;
 }
 

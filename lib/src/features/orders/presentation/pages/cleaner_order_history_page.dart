@@ -105,6 +105,8 @@ String _statusHistoryLabel(CleanerOrderStatus status) {
   switch (status) {
     case CleanerOrderStatus.available:
       return 'Новые заказы';
+    case CleanerOrderStatus.awaitingPayment:
+      return 'Ожидают оплаты';
     case CleanerOrderStatus.assigned:
       return 'В работе';
     case CleanerOrderStatus.completed:
@@ -357,6 +359,8 @@ String _statusLabel(CleanerOrderStatus status) {
   switch (status) {
     case CleanerOrderStatus.available:
       return 'Новый заказ';
+    case CleanerOrderStatus.awaitingPayment:
+      return 'Ожидает оплаты';
     case CleanerOrderStatus.assigned:
       return 'В работе';
     case CleanerOrderStatus.completed:
@@ -368,6 +372,8 @@ Color _statusColor(CleanerOrderStatus status) {
   switch (status) {
     case CleanerOrderStatus.available:
       return AppColors.primary;
+    case CleanerOrderStatus.awaitingPayment:
+      return AppColors.warning;
     case CleanerOrderStatus.assigned:
       return AppColors.primary;
     case CleanerOrderStatus.completed:

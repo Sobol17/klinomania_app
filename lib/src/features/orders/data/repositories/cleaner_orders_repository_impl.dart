@@ -33,4 +33,15 @@ class CleanerOrdersRepositoryImpl implements CleanerOrdersRepository {
   Future<void> completeOrder(String orderId) {
     return remoteDataSource.completeOrder(orderId);
   }
+
+  @override
+  Future<void> updateChecklistItem({
+    required String orderId,
+    required String itemId,
+  }) {
+    return remoteDataSource.updateChecklistItem(
+      orderId: orderId,
+      itemId: itemId,
+    );
+  }
 }
