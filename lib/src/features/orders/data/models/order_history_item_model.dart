@@ -5,6 +5,7 @@ class OrderHistoryItemModel {
     required this.id,
     required this.status,
     required this.propertyType,
+    required this.serviceName,
     required this.address,
     required this.entrance,
     required this.floor,
@@ -25,6 +26,7 @@ class OrderHistoryItemModel {
   final String id;
   final String status;
   final String propertyType;
+  final String serviceName;
   final String address;
   final String? entrance;
   final String? floor;
@@ -51,6 +53,7 @@ class OrderHistoryItemModel {
       status: json['status']?.toString() ?? '',
       propertyType:
           json['property_type']?.toString() ?? service['id']?.toString() ?? '',
+      serviceName: service['name']?.toString().trim() ?? '',
       address:
           address['full_address']?.toString() ??
           json['address']?.toString() ??
@@ -90,12 +93,15 @@ class OrderHistoryItemModel {
     final statusLabel = _statusLabel(mappedStatus);
     final formattedAddress = _formatAddress();
     final mappedPayment = _formatPaymentMethod(paymentMethod);
-    final rawServiceName = propertyType.isNotEmpty
-        ? propertyType
-        : cleaningType.isNotEmpty
-        ? cleaningType
-        : 'Уборка';
-    final serviceName = _mapPlanName(rawServiceName);
+    final mappedServiceName = serviceName.isNotEmpty
+        ? serviceName
+        : _mapPlanName(
+            propertyType.isNotEmpty
+                ? propertyType
+                : cleaningType.isNotEmpty
+                ? cleaningType
+                : 'Уборка',
+          );
     final baseCleaningLabel = cleaningType.isNotEmpty
         ? cleaningType
         : propertyType.isNotEmpty
@@ -109,7 +115,7 @@ class OrderHistoryItemModel {
     return OrderHistoryEntry(
       id: id,
       status: mappedStatus,
-      serviceName: serviceName,
+      serviceName: mappedServiceName,
       cleaningType: cleaningLabel,
       address: formattedAddress,
       price: totalPrice,

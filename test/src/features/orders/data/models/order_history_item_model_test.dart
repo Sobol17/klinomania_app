@@ -3,15 +3,30 @@ import 'package:klinomania/src/features/orders/data/models/order_history_item_mo
 import 'package:klinomania/src/features/orders/domain/entities/order_history_entry.dart';
 
 void main() {
-  test('maps awaiting_payment to a payable order', () {
-    final order = OrderHistoryItemModel.fromJson({
-      'public_id': 'order-public-id',
-      'status': 'awaiting_payment',
-      'scheduled_at': '2026-07-19T12:00:00Z',
-      'total_price': 1500,
-    }).toEntry();
+  group('OrderHistoryItemModel', () {
+    test('maps awaiting_payment to a payable order', () {
+      final order = OrderHistoryItemModel.fromJson({
+        'public_id': 'order-public-id',
+        'status': 'awaiting_payment',
+        'scheduled_at': '2026-07-19T12:00:00Z',
+        'total_price': 1500,
+      }).toEntry();
 
-    expect(order.status, OrderHistoryStatus.awaitingPayment);
-    expect(order.canPay, isTrue);
+      expect(order.status, OrderHistoryStatus.awaitingPayment);
+      expect(order.canPay, isTrue);
+    });
+
+    test('maps service.name to the order history entry service name', () {
+      final model = OrderHistoryItemModel.fromJson({
+        'id': 1,
+        'status': 'completed',
+        'property_type': 'standard',
+        'service': {'id': 'premium', 'name': 'Генеральная уборка'},
+        'scheduled_at': '2026-07-23T10:00:00.000Z',
+        'total_price': 5000,
+      });
+
+      expect(model.toEntry().serviceName, 'Генеральная уборка');
+    });
   });
 }
