@@ -32,6 +32,21 @@ class OrderHistoryRemoteDataSource {
     }
   }
 
+  Future<OrderHistoryItemModel> fetchOrder(String orderId) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/api/v1/client/orders/$orderId',
+      );
+      final data = response.data?['data'];
+      if (data is! Map) {
+        throw StateError('Некорректный ответ сервера');
+      }
+      return OrderHistoryItemModel.fromJson(Map<String, dynamic>.from(data));
+    } on DioException catch (error) {
+      throw StateError(mapDioError(error));
+    }
+  }
+
   Future<void> cancelOrder(String orderId) async {
     try {
       await _apiClient.post<void>('/api/v1/client/orders/$orderId/cancel');

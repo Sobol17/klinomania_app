@@ -6,6 +6,25 @@ import 'package:klinomania/src/core/network/api_client.dart';
 import 'package:klinomania/src/features/orders/data/datasources/order_history_remote_data_source.dart';
 
 void main() {
+  test('fetches a client order by public id', () async {
+    final adapter = _Adapter({
+      'data': {
+        'public_id': 'order-public-id',
+        'status': 'confirmed',
+        'scheduled_at': '2026-07-23T10:00:00Z',
+      },
+    });
+    final dataSource = OrderHistoryRemoteDataSource(
+      apiClient: _client(adapter),
+    );
+
+    final order = await dataSource.fetchOrder('order-public-id');
+
+    expect(adapter.request?.path, '/api/v1/client/orders/order-public-id');
+    expect(adapter.request?.method, 'GET');
+    expect(order.id, 'order-public-id');
+  });
+
   test('requests and maps a T-Bank payment link', () async {
     final adapter = _Adapter({
       'data': {

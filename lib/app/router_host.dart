@@ -7,6 +7,8 @@ import '../src/core/theme/app_theme.dart';
 import '../src/features/auth/presentation/controllers/auth_controller.dart';
 import '../src/features/auth/presentation/pages/auth_page.dart';
 import '../src/features/home/presentation/pages/home_page.dart';
+import '../src/features/notifications/presentation/controllers/push_notification_controller.dart';
+import '../src/features/orders/presentation/pages/order_details_route_page.dart';
 
 class RouterHost extends StatefulWidget {
   const RouterHost({super.key});
@@ -17,18 +19,26 @@ class RouterHost extends StatefulWidget {
 
 class _RouterHostState extends State<RouterHost> {
   AuthController? _authController;
+  PushNotificationController? _pushController;
   GoRouter? _router;
+  bool _pushNavigationScheduled = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final controller = context.read<AuthController>();
-    if (_authController == controller) {
+    final pushController = context.read<PushNotificationController>();
+    if (_authController == controller && _pushController == pushController) {
       return;
     }
 
+    _authController?.removeListener(_handleNavigationStateChanged);
+    _pushController?.removeListener(_handleNavigationStateChanged);
     _router?.dispose();
     _authController = controller;
+    _pushController = pushController;
+    controller.addListener(_handleNavigationStateChanged);
+    pushController.addListener(_handleNavigationStateChanged);
     _router = GoRouter(
       initialLocation: '/splash',
       refreshListenable: controller,
@@ -39,7 +49,10 @@ class _RouterHostState extends State<RouterHost> {
         }
 
         if (controller.isAuthenticated) {
-          return location == '/home' ? null : '/home';
+          if (location == '/splash' || location == '/auth') {
+            return '/home';
+          }
+          return null;
         }
 
         return location == '/auth' ? null : '/auth';
@@ -52,12 +65,46 @@ class _RouterHostState extends State<RouterHost> {
         ),
         GoRoute(path: '/auth', builder: (context, state) => const AuthPage()),
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+        GoRoute(
+          path: '/orders/:orderId',
+          builder: (context, state) =>
+              OrderDetailsRoutePage(orderId: state.pathParameters['orderId']!),
+        ),
       ],
     );
+    _handleNavigationStateChanged();
+  }
+
+  void _handleNavigationStateChanged() {
+    final authController = _authController;
+    final pushController = _pushController;
+    if (_pushNavigationScheduled ||
+        authController == null ||
+        pushController == null ||
+        authController.isRestoringSession ||
+        !authController.isAuthenticated ||
+        pushController.pendingOrderId == null) {
+      return;
+    }
+
+    _pushNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pushNavigationScheduled = false;
+      if (!mounted || !_authController!.isAuthenticated) {
+        return;
+      }
+      final orderId = _pushController!.takePendingOrderId();
+      if (orderId == null) {
+        return;
+      }
+      _router?.push('/orders/${Uri.encodeComponent(orderId)}');
+    });
   }
 
   @override
   void dispose() {
+    _authController?.removeListener(_handleNavigationStateChanged);
+    _pushController?.removeListener(_handleNavigationStateChanged);
     _router?.dispose();
     super.dispose();
   }

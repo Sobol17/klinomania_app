@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../src/core/network/api_client.dart';
+import '../src/core/notifications/device_token_service.dart';
 import '../src/core/storage/preferences_storage.dart';
 import '../src/features/auth/data/datasources/auth_local_data_source.dart';
 import '../src/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -10,6 +11,8 @@ import '../src/features/auth/domain/repositories/auth_repository.dart';
 import '../src/features/auth/presentation/controllers/auth_controller.dart';
 import '../src/features/home/presentation/controllers/home_controller.dart';
 import '../src/features/home/data/datasources/home_remote_data_source.dart';
+import '../src/features/notifications/data/datasources/push_token_remote_data_source.dart';
+import '../src/features/notifications/presentation/controllers/push_notification_controller.dart';
 import '../src/features/orders/data/datasources/cleaner_order_history_remote_data_source.dart';
 import '../src/features/orders/data/datasources/cleaner_orders_remote_data_source.dart';
 import '../src/features/orders/data/datasources/order_history_remote_data_source.dart';
@@ -58,6 +61,15 @@ class App extends StatelessWidget {
       providers: [
         Provider<PreferencesStorage>.value(value: preferencesStorage),
         Provider<ApiClient>(create: (_) => ApiClient(baseUrl: apiBaseUrl)),
+        Provider<DeviceTokenService>(
+          create: (context) => DeviceTokenService(
+            preferencesStorage: context.read<PreferencesStorage>(),
+          ),
+        ),
+        Provider<PushTokenRemoteDataSource>(
+          create: (context) =>
+              PushTokenRemoteDataSource(apiClient: context.read<ApiClient>()),
+        ),
         Provider<AuthRepository>(
           create: (context) => AuthRepositoryImpl(
             remoteDataSource: AuthRemoteDataSource(
@@ -163,6 +175,14 @@ class App extends StatelessWidget {
             repository: context.read<ServicesRepository>(),
             useApi: useApi,
           ),
+        ),
+        ChangeNotifierProvider<PushNotificationController>(
+          create: (context) => PushNotificationController(
+            authController: context.read<AuthController>(),
+            deviceTokenService: context.read<DeviceTokenService>(),
+            remoteDataSource: context.read<PushTokenRemoteDataSource>(),
+            useApi: useApi,
+          )..initialize(),
         ),
       ],
       child: const RouterHost(),

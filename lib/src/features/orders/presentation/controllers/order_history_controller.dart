@@ -47,6 +47,10 @@ class OrderHistoryController extends ChangeNotifier {
     }
   }
 
+  Future<OrderHistoryEntry> fetchOrder(String orderId) {
+    return repository.fetchOrder(orderId);
+  }
+
   Future<String?> cancelOrder(String orderId) async {
     if (_cancellingOrderId != null) {
       return 'Подождите, заявка обрабатывается';

@@ -15,6 +15,12 @@ class OrderHistoryRepositoryImpl implements OrderHistoryRepository {
   }
 
   @override
+  Future<OrderHistoryEntry> fetchOrder(String orderId) async {
+    final item = await remoteDataSource.fetchOrder(orderId);
+    return item.toEntry();
+  }
+
+  @override
   Future<void> cancelOrder(String orderId) {
     return remoteDataSource.cancelOrder(orderId);
   }
