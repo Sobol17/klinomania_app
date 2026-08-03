@@ -1,6 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'app/app.dart';
 import 'firebase_options.dart';
@@ -10,7 +10,7 @@ const bool kUseApi = bool.fromEnvironment('USE_API', defaultValue: true);
 const String kApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
   // defaultValue: 'http://10.0.2.2:8000',
-  defaultValue: 'http://186.246.11.247',
+  defaultValue: 'https://api.klinomania.ru',
 );
 
 Future<void> bootstrap() async {
