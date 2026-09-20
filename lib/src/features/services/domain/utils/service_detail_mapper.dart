@@ -32,6 +32,7 @@ class ServiceDetailMapper {
                 label: option.title,
                 subtitle: option.subtitle,
                 isAddon: option.isAddon,
+                isDefault: option.isDefault,
                 priceModifier: option.priceModifier,
               ),
             )
@@ -45,6 +46,7 @@ class ServiceDetailMapper {
                 label: option.title,
                 subtitle: option.subtitle,
                 isAddon: true,
+                isDefault: option.isDefault,
                 priceModifier: option.priceModifier,
               ),
             )

@@ -26,6 +26,8 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   String? _selectedCleaningId;
   late final Set<String> _selectedAddOns;
   late double _area;
+  bool _hasSelectedCleaningManually = false;
+  bool _didApplyRemoteCleaningDefault = false;
 
   @override
   void initState() {
@@ -34,12 +36,9 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     _selectedRoomId = _fallbackConfig.roomOptions?.isNotEmpty == true
         ? _fallbackConfig.roomOptions!.first.id
         : null;
-    final nonAddons = _fallbackConfig.cleaningOptions
-        ?.where((option) => !option.isAddon)
-        .toList();
-    _selectedCleaningId = nonAddons != null && nonAddons.isNotEmpty
-        ? nonAddons.first.id
-        : null;
+    _selectedCleaningId = _preferredCleaningOptionId(
+      _mainCleaningOptions(_fallbackConfig),
+    );
     _selectedAddOns = <String>{};
     _area = _fallbackConfig.initialArea;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -134,10 +133,13 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                           ],
                           _ApartmentOptions(
                             roomOptions: config.roomOptions ?? const [],
+                            cleaningOptions: _mainCleaningOptions(config),
                             addOnOptions: _addOnOptions(config),
-                            selectedId: _selectedRoomId,
+                            selectedRoomId: _selectedRoomId,
+                            selectedCleaningId: _selectedCleaningId,
                             selectedAddOns: _selectedAddOns,
-                            onSelect: _handleRoomSelection,
+                            onRoomSelect: _handleRoomSelection,
+                            onCleaningSelect: _handleCleaningSelection,
                             onAddOnSelect: _handleCleaningSelection,
                           ),
                         ],
@@ -197,6 +199,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
           _selectedAddOns.add(option.id);
         }
       } else {
+        _hasSelectedCleaningManually = true;
         _selectedCleaningId = option.id;
       }
     });
@@ -234,9 +237,8 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
   void _syncSelection(ServiceDetailConfig config) {
     final roomOptions = config.roomOptions ?? const [];
-    final cleaningOptions = config.cleaningOptions ?? const [];
+    final cleaningOptions = _mainCleaningOptions(config);
     final bool hasRooms = config.layout == ServiceDetailLayout.apartment;
-    final bool hasCleaning = config.layout == ServiceDetailLayout.house;
 
     if (hasRooms &&
         roomOptions.isNotEmpty &&
@@ -247,15 +249,38 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
       });
     }
 
-    if (hasCleaning) {
-      final nonAddons = cleaningOptions
-          .where((option) => !option.isAddon)
-          .toList();
-      if (nonAddons.isNotEmpty &&
-          !nonAddons.any((option) => option.id == _selectedCleaningId)) {
+    final remoteConfig = context.read<ServicesController>().detailConfig(
+      widget.service.id,
+    );
+    final shouldApplyRemoteDefault =
+        remoteConfig != null && !_didApplyRemoteCleaningDefault;
+    if (shouldApplyRemoteDefault) {
+      _didApplyRemoteCleaningDefault = true;
+    }
+    final selectedCleaningIsAvailable = cleaningOptions.any(
+      (option) => option.id == _selectedCleaningId,
+    );
+    if (cleaningOptions.isEmpty &&
+        remoteConfig != null &&
+        _selectedCleaningId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _selectedCleaningId = null);
+      });
+    } else if ((!selectedCleaningIsAvailable ||
+            (shouldApplyRemoteDefault && !_hasSelectedCleaningManually)) &&
+        cleaningOptions.isNotEmpty) {
+      final preferredId = _preferredCleaningOptionId(cleaningOptions);
+      if (preferredId != _selectedCleaningId) {
+        final preserveAvailableManualSelection =
+            shouldApplyRemoteDefault && selectedCleaningIsAvailable;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          setState(() => _selectedCleaningId = nonAddons.first.id);
+          if (!mounted ||
+              (preserveAvailableManualSelection &&
+                  _hasSelectedCleaningManually)) {
+            return;
+          }
+          setState(() => _selectedCleaningId = preferredId);
         });
       }
     }
@@ -274,6 +299,12 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
   List<ServiceCleaningOption> _addOnOptions(ServiceDetailConfig config) {
     return (config.cleaningOptions ?? const <ServiceCleaningOption>[])
         .where((option) => option.isAddon)
+        .toList(growable: false);
+  }
+
+  List<ServiceCleaningOption> _mainCleaningOptions(ServiceDetailConfig config) {
+    return (config.cleaningOptions ?? const <ServiceCleaningOption>[])
+        .where((option) => !option.isAddon)
         .toList(growable: false);
   }
 }
@@ -659,18 +690,24 @@ class _ServiceChecklistCardState extends State<_ServiceChecklistCard> {
 class _ApartmentOptions extends StatelessWidget {
   const _ApartmentOptions({
     required this.roomOptions,
+    required this.cleaningOptions,
     required this.addOnOptions,
-    required this.selectedId,
+    required this.selectedRoomId,
+    required this.selectedCleaningId,
     required this.selectedAddOns,
-    required this.onSelect,
+    required this.onRoomSelect,
+    required this.onCleaningSelect,
     required this.onAddOnSelect,
   });
 
   final List<ServiceRoomOption> roomOptions;
+  final List<ServiceCleaningOption> cleaningOptions;
   final List<ServiceCleaningOption> addOnOptions;
-  final String? selectedId;
+  final String? selectedRoomId;
+  final String? selectedCleaningId;
   final Set<String> selectedAddOns;
-  final ValueChanged<String> onSelect;
+  final ValueChanged<String> onRoomSelect;
+  final ValueChanged<ServiceCleaningOption> onCleaningSelect;
   final ValueChanged<ServiceCleaningOption> onAddOnSelect;
 
   @override
@@ -685,19 +722,36 @@ class _ApartmentOptions extends StatelessWidget {
         const SizedBox(height: 16),
         _OptionGrid(
           children: roomOptions.map((option) {
-            final bool selected = option.id == selectedId;
+            final bool selected = option.id == selectedRoomId;
             return _SelectableCard(
               title: option.label,
               selected: selected,
-              onTap: () => onSelect(option.id),
+              onTap: () => onRoomSelect(option.id),
             );
           }).toList(),
         ),
+        if (cleaningOptions.isNotEmpty) ...[
+          const SizedBox(height: 32),
+          const _SectionHeader(
+            title: 'Основной вариант уборки',
+            subtitle: 'Выберите подходящий формат уборки.',
+          ),
+          const SizedBox(height: 16),
+          _OptionGrid(
+            children: cleaningOptions.map((option) {
+              return _SelectableCard(
+                title: _formatOptionTitle(option),
+                selected: option.id == selectedCleaningId,
+                onTap: () => onCleaningSelect(option),
+              );
+            }).toList(),
+          ),
+        ],
         if (addOnOptions.isNotEmpty) ...[
           const SizedBox(height: 32),
           _AdditionalOptions(
             options: addOnOptions,
-            selectedRoomId: selectedId,
+            selectedRoomId: selectedRoomId,
             selectedIds: selectedAddOns,
             onSelect: onAddOnSelect,
           ),
@@ -705,6 +759,17 @@ class _ApartmentOptions extends StatelessWidget {
       ],
     );
   }
+}
+
+String? _preferredCleaningOptionId(Iterable<ServiceCleaningOption> options) {
+  ServiceCleaningOption? first;
+  for (final option in options) {
+    first ??= option;
+    if (option.isDefault) {
+      return option.id;
+    }
+  }
+  return first?.id;
 }
 
 class _SectionHeader extends StatelessWidget {

@@ -106,6 +106,16 @@ class _CleanerOrderChecklistPageState extends State<CleanerOrderChecklistPage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (order.mainCleaningOption != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      order.mainCleaningOption!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     order.address,

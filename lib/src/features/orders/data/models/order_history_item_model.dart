@@ -20,6 +20,7 @@ class OrderHistoryItemModel {
     required this.totalPrice,
     required this.cleaner,
     this.roomsDescription,
+    this.mainCleaningOption,
     this.additionalOptions = const [],
   });
 
@@ -41,19 +42,36 @@ class OrderHistoryItemModel {
   final double totalPrice;
   final OrderCleaner cleaner;
   final String? roomsDescription;
+  final String? mainCleaningOption;
   final List<String> additionalOptions;
 
   factory OrderHistoryItemModel.fromJson(Map<String, dynamic> json) {
     final address = _map(json['address']);
     final service = _map(json['service']);
-    final roomOption = _map(json['room_option']);
-    final cleaningOption = _map(json['cleaning_option']);
+    final lineItems = _mapList(json['line_items']);
+    final directRoomOption = _map(json['room_option']);
+    final roomOption = directRoomOption.isNotEmpty
+        ? directRoomOption
+        : _lineItem(lineItems, 'room_option');
+    final directCleaningOption = _map(json['cleaning_option']);
+    final cleaningOption = directCleaningOption.isNotEmpty
+        ? directCleaningOption
+        : _lineItem(lineItems, 'cleaning_option');
+    final mainCleaningOption = _stringOrNull(cleaningOption['title']);
+    final directAdditionalOptions = _stringList(
+      json['additional_options'] ??
+          json['additionalOptions'] ??
+          json['extra_options'],
+    );
     return OrderHistoryItemModel(
       id: json['public_id']?.toString() ?? json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
       propertyType:
           json['property_type']?.toString() ?? service['id']?.toString() ?? '',
-      serviceName: service['name']?.toString().trim() ?? '',
+      serviceName:
+          service['name']?.toString().trim() ??
+          service['title']?.toString().trim() ??
+          '',
       address:
           address['full_address']?.toString() ??
           json['address']?.toString() ??
@@ -68,7 +86,7 @@ class OrderHistoryItemModel {
       areaSqm: _parseDouble(json['area_sqm']),
       cleaningType:
           json['cleaning_type']?.toString() ??
-          cleaningOption['title']?.toString() ??
+          mainCleaningOption ??
           service['title']?.toString() ??
           '',
       windowCleaning: json['window_cleaning'] == true,
@@ -80,11 +98,10 @@ class OrderHistoryItemModel {
             json['roomsDescription'] ??
             roomOption['title'],
       ),
-      additionalOptions: _stringList(
-        json['additional_options'] ??
-            json['additionalOptions'] ??
-            json['extra_options'],
-      ),
+      mainCleaningOption: mainCleaningOption,
+      additionalOptions: directAdditionalOptions.isNotEmpty
+          ? directAdditionalOptions
+          : _lineItemTitles(lineItems, 'extra_option'),
     );
   }
 
@@ -123,6 +140,7 @@ class OrderHistoryItemModel {
       scheduledAt: scheduledAt,
       area: areaSqm > 0 ? areaSqm : null,
       roomsDescription: roomsDescription,
+      mainCleaningOption: mainCleaningOption,
       additionalOptions: additionalOptions,
       startStatusLabel: statusLabel,
       endStatusLabel: statusLabel,
@@ -191,6 +209,35 @@ class OrderHistoryItemModel {
       return Map<String, dynamic>.from(value);
     }
     return const {};
+  }
+
+  static List<Map<String, dynamic>> _mapList(dynamic value) {
+    if (value is! Iterable) return const [];
+    return value
+        .whereType<Map>()
+        .map(Map<String, dynamic>.from)
+        .toList(growable: false);
+  }
+
+  static Map<String, dynamic> _lineItem(
+    List<Map<String, dynamic>> items,
+    String kind,
+  ) {
+    for (final item in items) {
+      if (item['kind'] == kind) return item;
+    }
+    return const {};
+  }
+
+  static List<String> _lineItemTitles(
+    List<Map<String, dynamic>> items,
+    String kind,
+  ) {
+    return items
+        .where((item) => item['kind'] == kind)
+        .map((item) => _stringOrNull(item['title']))
+        .whereType<String>()
+        .toList(growable: false);
   }
 
   static OrderCleaner _parseCleaner(dynamic value) {

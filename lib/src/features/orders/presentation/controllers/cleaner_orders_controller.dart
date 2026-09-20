@@ -93,6 +93,7 @@ class CleanerOrdersController extends ChangeNotifier {
       area: existing.area,
       status: CleanerOrderStatus.assigned,
       services: existing.services,
+      mainCleaningOption: existing.mainCleaningOption,
       checklistSections: existing.checklistSections,
       highlightCard: false,
     );
@@ -197,6 +198,7 @@ class CleanerOrdersController extends ChangeNotifier {
       area: existing.area,
       status: CleanerOrderStatus.completed,
       services: existing.services,
+      mainCleaningOption: existing.mainCleaningOption,
       checklistSections: existing.checklistSections,
       highlightCard: false,
     );

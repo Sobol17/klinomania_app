@@ -33,6 +33,7 @@ class OrderHistoryEntry {
     required this.cleaner,
     this.area,
     this.roomsDescription,
+    this.mainCleaningOption,
     this.additionalOptions = const [],
     this.startTime,
     this.endTime,
@@ -52,6 +53,7 @@ class OrderHistoryEntry {
   final DateTime scheduledAt;
   final double? area;
   final String? roomsDescription;
+  final String? mainCleaningOption;
   final List<String> additionalOptions;
   final DateTime? startTime;
   final DateTime? endTime;

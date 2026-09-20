@@ -265,6 +265,11 @@ class _CleanerOrderDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _DetailItem(label: 'Количество комнат', value: order.objectType),
+          if (order.mainCleaningOption != null)
+            _DetailItem(
+              label: 'Основной вариант уборки',
+              value: order.mainCleaningOption!,
+            ),
           _DetailItem(
             label: 'Дата и время',
             value: OrderHistoryFormatters.formatFullDateTime(order.startAt),

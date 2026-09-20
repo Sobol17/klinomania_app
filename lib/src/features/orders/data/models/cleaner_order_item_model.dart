@@ -18,6 +18,7 @@ class CleanerOrderItemModel {
     required this.paymentMethod,
     required this.totalPrice,
     this.roomsDescription,
+    this.mainCleaningOption,
     this.additionalOptions = const [],
     this.checklistSections = const [],
   });
@@ -38,14 +39,28 @@ class CleanerOrderItemModel {
   final String paymentMethod;
   final double totalPrice;
   final String? roomsDescription;
+  final String? mainCleaningOption;
   final List<String> additionalOptions;
   final List<CleanerOrderChecklistSection> checklistSections;
 
   factory CleanerOrderItemModel.fromJson(Map<String, dynamic> json) {
     final address = _map(json['address']);
     final service = _map(json['service']);
-    final roomOption = _map(json['room_option']);
-    final cleaningOption = _map(json['cleaning_option']);
+    final lineItems = _mapList(json['line_items']);
+    final directRoomOption = _map(json['room_option']);
+    final roomOption = directRoomOption.isNotEmpty
+        ? directRoomOption
+        : _lineItem(lineItems, 'room_option');
+    final directCleaningOption = _map(json['cleaning_option']);
+    final cleaningOption = directCleaningOption.isNotEmpty
+        ? directCleaningOption
+        : _lineItem(lineItems, 'cleaning_option');
+    final mainCleaningOption = _stringOrNull(cleaningOption['title']);
+    final directAdditionalOptions = _stringList(
+      json['additional_options'] ??
+          json['additionalOptions'] ??
+          json['extra_options'],
+    );
     return CleanerOrderItemModel(
       id: json['public_id']?.toString() ?? json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
@@ -65,7 +80,7 @@ class CleanerOrderItemModel {
       areaSqm: _parseDouble(json['area_sqm']),
       cleaningType:
           json['cleaning_type']?.toString() ??
-          cleaningOption['title']?.toString() ??
+          mainCleaningOption ??
           service['title']?.toString() ??
           '',
       windowCleaning: _parseBool(json['window_cleaning']),
@@ -76,11 +91,10 @@ class CleanerOrderItemModel {
             json['roomsDescription'] ??
             roomOption['title'],
       ),
-      additionalOptions: _stringList(
-        json['additional_options'] ??
-            json['additionalOptions'] ??
-            json['extra_options'],
-      ),
+      mainCleaningOption: mainCleaningOption,
+      additionalOptions: directAdditionalOptions.isNotEmpty
+          ? directAdditionalOptions
+          : _lineItemTitles(lineItems, 'extra_option'),
       checklistSections: _parseChecklist(
         checklist: json['checklist'],
         sections: json['checklist_sections'],
@@ -98,7 +112,6 @@ class CleanerOrderItemModel {
     final planName = _mapPlanName(rawPlanName);
     final objectType = roomsDescription ?? 'Квартира';
     final services = _buildServices(
-      baseLabel: _mapCleaningTypeLabel(cleaningType),
       windowCleaning: windowCleaning,
       additionalOptions: additionalOptions,
     );
@@ -116,6 +129,7 @@ class CleanerOrderItemModel {
       area: areaSqm,
       status: statusValue,
       services: services,
+      mainCleaningOption: mainCleaningOption,
       checklistSections: checklistSections,
       highlightCard: statusValue == CleanerOrderStatus.available,
     );
@@ -150,14 +164,10 @@ class CleanerOrderItemModel {
   }
 
   static List<CleanerOrderServiceOption> _buildServices({
-    required String baseLabel,
     required bool windowCleaning,
     required List<String> additionalOptions,
   }) {
     final services = <CleanerOrderServiceOption>[];
-    if (baseLabel.isNotEmpty && baseLabel != '-') {
-      services.add(CleanerOrderServiceOption(label: baseLabel));
-    }
     services.addAll(
       additionalOptions.map(
         (option) => CleanerOrderServiceOption(label: option),
@@ -307,6 +317,35 @@ class CleanerOrderItemModel {
     return const {};
   }
 
+  static List<Map<String, dynamic>> _mapList(dynamic value) {
+    if (value is! Iterable) return const [];
+    return value
+        .whereType<Map>()
+        .map(Map<String, dynamic>.from)
+        .toList(growable: false);
+  }
+
+  static Map<String, dynamic> _lineItem(
+    List<Map<String, dynamic>> items,
+    String kind,
+  ) {
+    for (final item in items) {
+      if (item['kind'] == kind) return item;
+    }
+    return const {};
+  }
+
+  static List<String> _lineItemTitles(
+    List<Map<String, dynamic>> items,
+    String kind,
+  ) {
+    return items
+        .where((item) => item['kind'] == kind)
+        .map((item) => _stringOrNull(item['title']))
+        .whereType<String>()
+        .toList(growable: false);
+  }
+
   static String _mapPlanName(String value) {
     final normalized = value.toLowerCase();
     switch (normalized) {
@@ -318,22 +357,6 @@ class CleanerOrderItemModel {
         return 'Генеральская';
       case 'cottage':
         return 'Роскошный максимум';
-      default:
-        return value;
-    }
-  }
-
-  static String _mapCleaningTypeLabel(String value) {
-    final normalized = value.toLowerCase();
-    switch (normalized) {
-      case 'standard':
-      case 'express':
-      case 'support':
-        return 'Расширенная поддерживающая уборка';
-      case 'premium':
-        return 'Глубокая уборка с проработкой деталей';
-      case 'cottage':
-        return 'Премиальный клининг «всё включено»';
       default:
         return value;
     }

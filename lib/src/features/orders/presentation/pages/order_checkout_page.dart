@@ -154,6 +154,7 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                         const SizedBox(height: 16),
                         _OrderDetailsSection(
                           roomLabel: _roomLabel,
+                          cleaningLabel: _cleaningLabel,
                           addOns: _selectedAddOnLabels,
                         ),
                       ],
@@ -192,6 +193,21 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
         .firstWhere(
           (option) => option.id == widget.selectedRoomId,
           orElse: () => roomOptions.first,
+        )
+        .label;
+  }
+
+  String? get _cleaningLabel {
+    final cleaningOptions = widget.config.cleaningOptions
+        ?.where((option) => !option.isAddon)
+        .toList(growable: false);
+    if (cleaningOptions == null || cleaningOptions.isEmpty) {
+      return null;
+    }
+    return cleaningOptions
+        .firstWhere(
+          (option) => option.id == widget.selectedCleaningId,
+          orElse: () => cleaningOptions.first,
         )
         .label;
   }
@@ -840,9 +856,14 @@ class _DateTimeSection extends StatelessWidget {
 }
 
 class _OrderDetailsSection extends StatelessWidget {
-  const _OrderDetailsSection({required this.roomLabel, required this.addOns});
+  const _OrderDetailsSection({
+    required this.roomLabel,
+    required this.cleaningLabel,
+    required this.addOns,
+  });
 
   final String? roomLabel;
+  final String? cleaningLabel;
   final List<String> addOns;
 
   @override
@@ -860,8 +881,16 @@ class _OrderDetailsSection extends StatelessWidget {
           const SizedBox(height: 16),
           if (roomLabel != null)
             _OrderInfoRow(label: 'Количество комнат', value: roomLabel!),
-          if (addOns.isNotEmpty) ...[
+          if (cleaningLabel != null) ...[
             if (roomLabel != null) const SizedBox(height: 12),
+            _OrderInfoRow(
+              label: 'Основной вариант уборки',
+              value: cleaningLabel!,
+            ),
+          ],
+          if (addOns.isNotEmpty) ...[
+            if (roomLabel != null || cleaningLabel != null)
+              const SizedBox(height: 12),
             Text(
               'Дополнительные опции',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -879,7 +908,8 @@ class _OrderDetailsSection extends StatelessWidget {
               ],
             ),
           ] else ...[
-            if (roomLabel != null) const SizedBox(height: 12),
+            if (roomLabel != null || cleaningLabel != null)
+              const SizedBox(height: 12),
             Text(
               'Дополнительные опции',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -890,7 +920,7 @@ class _OrderDetailsSection extends StatelessWidget {
             const SizedBox(height: 8),
             const _EmptyAddOnsRow(),
           ],
-          if (roomLabel == null && addOns.isEmpty) ...[
+          if (roomLabel == null && cleaningLabel == null && addOns.isEmpty) ...[
             const SizedBox(height: 12),
             Text(
               'Параметры заказа будут переданы клинеру.',

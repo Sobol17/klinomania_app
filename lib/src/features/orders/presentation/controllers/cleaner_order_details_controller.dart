@@ -70,6 +70,7 @@ class CleanerOrderDetailsController extends ChangeNotifier {
       area: order.area,
       status: order.status,
       services: order.services,
+      mainCleaningOption: order.mainCleaningOption,
       checklistSections: order.checklistSections
           .map(
             (section) => CleanerOrderChecklistSection(

@@ -66,20 +66,11 @@ class _OrderHistoryDetailsPageState extends State<OrderHistoryDetailsPage> {
     return 'Что-то пошло не так. Попробуйте снова';
   }
 
-  OrderHistoryEntry _currentOrder(OrderHistoryController controller) {
-    for (final order in controller.orders) {
-      if (order.id == widget.order.id) {
-        return order;
-      }
-    }
-    return widget.order;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<OrderHistoryController>();
-    final order = _currentOrder(controller);
+    final order = widget.order;
     final bool hasCleanerAssigned =
         order.status == OrderHistoryStatus.teamFormed ||
         order.status == OrderHistoryStatus.inProgress ||
@@ -123,6 +114,7 @@ class _OrderHistoryDetailsPageState extends State<OrderHistoryDetailsPage> {
               children: [
                 const SizedBox(height: 8),
                 const AppBackButton(),
+                const SizedBox(height: 12),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
@@ -207,7 +199,12 @@ class _OrderHistoryDetailCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _DetailItem(label: 'Вид уборки', value: order.cleaningType),
+          _DetailItem(
+            label: order.mainCleaningOption == null
+                ? 'Вид уборки'
+                : 'Основной вариант уборки',
+            value: order.mainCleaningOption ?? order.cleaningType,
+          ),
           if (order.area != null)
             _DetailItem(
               label: 'Площадь',

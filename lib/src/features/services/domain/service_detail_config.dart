@@ -24,6 +24,7 @@ class ServiceCleaningOption {
     required this.label,
     this.subtitle,
     this.isAddon = false,
+    this.isDefault = false,
     this.priceModifier,
   });
 
@@ -31,6 +32,7 @@ class ServiceCleaningOption {
   final String label;
   final String? subtitle;
   final bool isAddon;
+  final bool isDefault;
   final double? priceModifier;
 }
 

@@ -6,7 +6,7 @@ import '../../../home/presentation/widgets/home_background.dart';
 import '../../domain/entities/order_history_entry.dart';
 import '../controllers/order_history_controller.dart';
 import '../utils/order_history_formatters.dart';
-import 'order_history_details_page.dart';
+import 'order_details_route_page.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -127,7 +127,7 @@ class _OrderHistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => OrderHistoryDetailsPage(order: order),
+          builder: (_) => OrderDetailsRoutePage(orderId: order.id),
         ),
       ),
       child: Container(
@@ -216,7 +216,8 @@ class _OrderHistoryCard extends StatelessWidget {
     if (rooms != null && rooms.isNotEmpty) {
       parts.add(rooms);
     }
-    final cleaningType = order.cleaningType.trim();
+    final cleaningType = (order.mainCleaningOption ?? order.cleaningType)
+        .trim();
     if (cleaningType.isNotEmpty && cleaningType != order.serviceName) {
       parts.add(cleaningType);
     }

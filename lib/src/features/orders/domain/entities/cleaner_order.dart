@@ -59,6 +59,7 @@ class CleanerOrder {
     required this.area,
     required this.status,
     required this.services,
+    this.mainCleaningOption,
     this.checklistSections = const [],
     this.highlightCard = false,
   });
@@ -75,6 +76,7 @@ class CleanerOrder {
   final double area;
   final CleanerOrderStatus status;
   final List<CleanerOrderServiceOption> services;
+  final String? mainCleaningOption;
   final List<CleanerOrderChecklistSection> checklistSections;
   final bool highlightCard;
 
